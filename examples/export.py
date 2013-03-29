@@ -1,11 +1,11 @@
 # runs a sforce SOQL query and saves the results as a csv file.
 import sys
 import string
-import beatbox
+import pyforce
 import xmltramp
 
-sf = beatbox._tPartnerNS
-svc = beatbox.Client()
+sf = pyforce._tPartnerNS
+svc = pyforce.Client()
 
 def buildSoql(sobjectName):
 	dr = svc.describeSObjects(sobjectName)

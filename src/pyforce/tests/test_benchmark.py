@@ -5,9 +5,9 @@ import datetime
 from time import time
 
 import sfconfig
-import beatbox
+import pyforce
 
-from beatbox import SoapFaultError
+from pyforce import SoapFaultError
 
 BENCHMARK_REPS = 1
 def benchmark(func):
@@ -26,7 +26,7 @@ def benchmark(func):
 class TestUtils(unittest.TestCase):
 
     def setUp(self):
-        self.svc = svc = beatbox.PythonClient(serverUrl='https://www.salesforce.com/services/Soap/u/15.0')
+        self.svc = svc = pyforce.PythonClient(serverUrl='https://www.salesforce.com/services/Soap/u/15.0')
         svc.login(sfconfig.USERNAME, sfconfig.PASSWORD)
         self._todelete = list()
 

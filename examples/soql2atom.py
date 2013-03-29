@@ -1,6 +1,6 @@
 #!/usr/bin/python
 
-"""soql2atom: a beatbox demo that generates an atom 1.0 formatted feed of any SOQL query (requires beatbox 0.9 or later)
+"""soql2atom: a `pyforce` demo that generates an atom 1.0 formatted feed of any SOQL query (adapted from Simon Fell's pyforce example)
 
    The fields Id, SystemModStamp and CreatedDate are automatically added to the SOQL if needed.
    The first field in the select list becomes the title of the entry, so make sure to setup the order of the fields as you need.
@@ -22,7 +22,7 @@ __author__ = "Simon Fell"
 __copyright__ = "(C) 2006 Simon Fell. GNU GPL 2."
 
 import sys
-import beatbox
+import pyforce
 import cgi
 import cgitb
 from xml.sax.xmlreader import AttributesNSImpl
@@ -33,9 +33,9 @@ import base64
 import string
 
 cgitb.enable()
-sf = beatbox._tPartnerNS
-svc = beatbox.Client()
-_noAttrs = beatbox._noAttrs
+sf = pyforce._tPartnerNS
+svc = pyforce.Client()
+_noAttrs = pyforce._noAttrs
 
 def addRequiredFieldsToSoql(soql):
 	findPos = string.find(string.lower(soql), "from")
@@ -49,8 +49,8 @@ def addRequiredFieldsToSoql(soql):
 			
 def soql2atom(loginResult, soql, title):
 	soqlWithFields = addRequiredFieldsToSoql(soql)
-	userInfo = loginResult[beatbox._tPartnerNS.userInfo]
-	serverUrl = str(loginResult[beatbox._tPartnerNS.serverUrl])
+	userInfo = loginResult[pyforce._tPartnerNS.userInfo]
+	serverUrl = str(loginResult[pyforce._tPartnerNS.serverUrl])
 	(scheme, host, path, params, query, frag) = urlparse(serverUrl)
 	sfbaseUrl = scheme + "://" + host + "/"
 	thisUrl = "http://" + os.environ["HTTP_HOST"] + os.environ["REQUEST_URI"]
@@ -63,7 +63,7 @@ def soql2atom(loginResult, soql, title):
 	doGzip = os.environ.has_key("HTTP_ACCEPT_ENCODING") and "gzip" in string.lower(os.environ["HTTP_ACCEPT_ENCODING"]).split(',')
 	if (doGzip): print "content-encoding: gzip"
 	print ""
-	x = beatbox.XmlWriter(doGzip)
+	x = pyforce.XmlWriter(doGzip)
 	x.startPrefixMapping("a", atom_ns)
 	x.startPrefixMapping("s", ent_ns)
 	x.startElement(atom_ns, "feed")
@@ -78,7 +78,7 @@ def soql2atom(loginResult, soql, title):
 	x.startElement(atom_ns, "link", rel)
 	x.endElement()
 	x.writeStringElement(atom_ns, "updated", datetime.datetime.utcnow().isoformat() +"Z") 
-	x.writeStringElement(atom_ns, "id", thisUrl + "&userid=" + str(loginResult[beatbox._tPartnerNS.userId]))
+	x.writeStringElement(atom_ns, "id", thisUrl + "&userid=" + str(loginResult[pyforce._tPartnerNS.userId]))
 	x.characters("\n")
 	type = AttributesNSImpl({(None, u"type") : "html"}, {(None, u"type") : u"type" })
 	for row in qr[sf.records:]:
@@ -131,7 +131,7 @@ else:
 	try:
 		lr = svc.login(username, password)	
 		soql2atom(lr, soql, title)
-	except beatbox.SoapFaultError, sfe:
+	except pyforce.SoapFaultError, sfe:
 		if (sfe.faultCode == 'INVALID_LOGIN'):
 			authenticationRequired(sfe.faultString)
 		else:

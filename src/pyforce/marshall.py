@@ -1,5 +1,5 @@
-from _beatbox import _tPartnerNS, _tSObjectNS, _tSoapNS
-import python_client
+from xmlclient import _tPartnerNS, _tSObjectNS, _tSoapNS
+import pyforce
 
 from types import ListType, TupleType
 
@@ -57,7 +57,7 @@ def multiMarshaller(fieldname, xml, ns):
 register(multitypes, multiMarshaller)
 
 def booleanMarshaller(fieldname, xml, ns):
-    return python_client._bool(xml[getattr(ns,fieldname)])
+    return pyforce._bool(xml[getattr(ns,fieldname)])
 
 register('boolean', booleanMarshaller)
 

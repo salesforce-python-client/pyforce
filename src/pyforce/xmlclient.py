@@ -1,9 +1,7 @@
-"""beatbox: Makes the salesforce.com SOAP API easily accessible."""
-
-__version__ = '20.0'
-__author__ = "Simon Fell et al"
+__version__ = '1.0'
+__author__ = "Simon Fell et al. reluctantly forked by idbentley"
 __credits__ = "Mad shouts to the sforce possie"
-__copyright__ = "(C) 2006 Simon Fell. GNU GPL 2."
+__copyright__ = "GNU GPL 2."
 
 import httplib
 import logging
@@ -36,7 +34,7 @@ gzipRequest=True    # are we going to gzip the request ?
 gzipResponse=True   # are we going to tell teh server to gzip the response ?
 forceHttp=False     # force all connections to be HTTP, for debugging
 
-logger = logging.getLogger('beatbox')
+_logger = logging.getLogger('pyforce')
 
 def makeConnection(scheme, host):
     if forceHttp or scheme.upper() == 'HTTP':
@@ -288,7 +286,7 @@ class SoapEnvelope:
     #   todo: check for mU='1' headers
     #   returns the relevant result from the body child
     def post(self, conn=None, alwaysReturnList=False):
-        logger.debug(self.__class__)
+        _logger.debug(self.__class__)
         headers = { "User-Agent": "BeatBox/" + __version__,
                     "SOAPAction": "\"\"",
                     "Content-Type": "text/xml; charset=utf-8" }

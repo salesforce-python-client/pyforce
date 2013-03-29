@@ -3,15 +3,15 @@ import unittest
 import datetime
 
 import sfconfig
-import beatbox
+import pyforce
 
-from beatbox import SoapFaultError
-from beatbox.python_client import _prepareSObjects
+from pyforce import SoapFaultError
+from pyforce.pyforce import _prepareSObjects
 
 class TestUtils(unittest.TestCase):
 
     def setUp(self):
-        self.svc = svc = beatbox.PythonClient()
+        self.svc = svc = pyforce.PythonClient()
         svc.login(sfconfig.USERNAME, sfconfig.PASSWORD)
         self._todelete = list()
     
@@ -393,11 +393,11 @@ class TestUtils(unittest.TestCase):
     def testTypeDescriptionsCache(self):
         # patch describeSObjects to make a record when it is called
         calls = []
-        standard_describeSObjects = beatbox.PythonClient.describeSObjects
+        standard_describeSObjects = pyforce.PythonClient.describeSObjects
         def patched_describeSObjects(self, sObjectTypes):
             calls.append(sObjectTypes)
             return standard_describeSObjects(self, sObjectTypes)
-        beatbox.PythonClient.describeSObjects = patched_describeSObjects
+        pyforce.PythonClient.describeSObjects = patched_describeSObjects
         
         # turn the cache on
         self.svc.cacheTypeDescriptions = True

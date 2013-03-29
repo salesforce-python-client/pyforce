@@ -2,5 +2,5 @@
 PYTHON=python
 export PYTHONPATH=.:./src
 
-$PYTHON src/beatbox/tests/test_beatbox.py
-$PYTHON src/beatbox/tests/test_pythonClient.py
+$PYTHON src/pyforce/tests/test_xmlclient.py
+$PYTHON src/pyforce/tests/test_python_client.py

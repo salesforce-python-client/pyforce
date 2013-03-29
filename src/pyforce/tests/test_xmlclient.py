@@ -1,10 +1,9 @@
-
 import unittest
-import beatbox
+import pyforce
 import sfconfig
 import datetime
-partnerns = beatbox._tPartnerNS
-svc = beatbox.XMLClient()
+partnerns = pyforce._tPartnerNS
+svc = pyforce.XMLClient()
 
 class TestBeatbox(unittest.TestCase):
 
@@ -32,7 +31,7 @@ class TestBeatbox(unittest.TestCase):
             [id])
         for k in ['LastName', 'FirstName', 'Phone', 'Email']:
             self.assertEqual(
-                data[k], str(contact[getattr(beatbox._tSObjectNS, k)]))
+                data[k], str(contact[getattr(pyforce._tSObjectNS, k)]))
 
 
     def testUpdate(self):
@@ -47,7 +46,7 @@ class TestBeatbox(unittest.TestCase):
         self._todelete.append(id)
         contact = svc.retrieve('Email', 'Contact', [id])
         self.assertEqual(
-            str(contact[beatbox._tSObjectNS.Email]), data['Email'])
+            str(contact[pyforce._tSObjectNS.Email]), data['Email'])
         updata = dict(type='Contact',
             Id=id,
             Email='jd@doe.com'
@@ -58,9 +57,9 @@ class TestBeatbox(unittest.TestCase):
             [id])
         for k in ['LastName', 'FirstName', ]:
             self.assertEqual(
-                data[k], str(contact[getattr(beatbox._tSObjectNS, k)]))
+                data[k], str(contact[getattr(pyforce._tSObjectNS, k)]))
         self.assertEqual(
-            str(contact[beatbox._tSObjectNS.Email]), updata['Email'])
+            str(contact[pyforce._tSObjectNS.Email]), updata['Email'])
 
     def testQuery(self):
         data = dict(type='Contact',
@@ -94,7 +93,7 @@ class TestBeatbox(unittest.TestCase):
         self.assertEqual(int(str(res[partnerns.size])), 1)
         records = res[partnerns.records:]
         self.assertEqual(
-            janeid, str(records[0][beatbox._tSObjectNS.Id]))
+            janeid, str(records[0][pyforce._tSObjectNS.Id]))
 
     def testSearch(self):
         sosl = 'find {barr} in ALL FIELDS returning Contact(Id, LastName, FirstName, Phone, Email, Birthdate)'

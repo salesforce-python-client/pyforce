@@ -1,5 +1,5 @@
-from _beatbox import _tPartnerNS, _tSObjectNS
-from _beatbox import Client as BaseClient
+from xmlclient import _tPartnerNS, _tSObjectNS
+from xmlclient import Client as BaseClient
 from marshall import marshall
 from types import TupleType, ListType
 import re

@@ -120,7 +120,7 @@ David Lanstein has created a `Python Salesforce Toolkit` that is based on the
 `suds` SOAP library.  That project has not seen any commit since June 2011, so
 it is assumed to be abandoned.
 
-.. _`Python Salesforce Toolkit`: http://code.google.com/p/salesforce-python-toolkit/
+.. `Python Salesforce Toolkit`: http://code.google.com/p/salesforce-python-toolkit/
 
 Running Tests
 =============
@@ -154,6 +154,6 @@ Add './src' to your PYTHONPATH
 
 Run the tests::
 
-    python src/beatbox/tests/test_beatbox.py
-    python src/beatbox/tests/test_pythonClient.py
+    python src/pyforce/tests/test_xmlclient.py
+    python src/pyforce/tests/test_pythonClient.py
 
