@@ -1,16 +1,15 @@
 
 from setuptools import setup
 
-setup(name='beatbox',
-    version='20.0', # be sure to update the version in _beatbox.py too
+setup(name='pyforce',
+    version='1.0', # be sure to update the version in pyforce.py too
     package_dir={'': 'src'},
-    packages=['beatbox'],
-    author = "Simon Fell et al",
-    author_email = 'plonesf@googlegroups.com',
-    description = "A Python library for querying/updating Saleforce.com data via SOAP API",
-    long_description = open('README.txt').read() + "\n" + open('CHANGES.txt').read(),
+    packages=['pyforce'],
+    author = "Simon Fell et al.  reluctantly Forked by idbentley",
+    author_email = 'ian.bentley@gmail.com',
+    description = "A Python client wrapping the Saleforce.com SOAP API",
+    long_description = open('README.md').read() + "\n" + open('CHANGES.txt').read(),
     license = "GNU GENERAL PUBLIC LICENSE Version 2",
     keywords = "python salesforce salesforce.com",
-    url = "http://code.google.com/p/salesforce-beatbox/",
-    classifiers = ["Development Status :: 5 - Production/Stable"]
+    url = "https://github.com/idbentley/pyforce",
     )

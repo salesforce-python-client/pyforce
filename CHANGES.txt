@@ -1,9 +1,10 @@
 Changelog
 =========
 
-10.1 (unreleased)
------------------
+1.0 (2013-04-01)
 
+Beatbox forked as Pyforce
+------------------------
 
 20.0 (2010-11-30)
 -----------------
@@ -112,6 +113,9 @@ Changelog
 * Access 'created' instead of 'isCreated' in the upsert result. This closes
   http://code.google.com/p/salesforce-beatbox/issues/detail?id=4
   [davisagli]
+
+10.1 (unreleased)
+-----------------
 
 0.10 (2009-05-06)
 -----------------
