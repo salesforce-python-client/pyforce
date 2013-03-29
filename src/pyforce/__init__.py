@@ -1,4 +1,3 @@
-
 from xmlclient import _tPartnerNS, _tSObjectNS, _tSoapNS, SoapFaultError, SessionTimeoutError, DEFAULT_SERVER_URL
 from xmlclient import Client as XMLClient
 from pyforce import Client as PythonClient

@@ -19,12 +19,12 @@ class QueryRecord(dict):
             return self[n]
         except KeyError:
             return dict.__getattr__(self, n)
-   
+
     def __setattr__(self, n, v):
         self[n] = v
 
 class QueryRecordSet(list):
-    
+
     def __init__(self, records, done, size, **kw):
         for r in records:
             self.append(r)
@@ -84,7 +84,7 @@ class Client(BaseClient):
         if self.__conn and self.__conn._HTTPConnection__state == 'Idle':
             return True
         return False
-    
+
     def describeGlobal(self):
         res = BaseClient.describeGlobal(self)
         data = dict()
@@ -431,7 +431,7 @@ def _prepareSObjects(sObjects):
          if 'fieldsToNull' in field_dict:
              raise ValueError, "fieldsToNull should be populated by the client, not the caller."
          field_dict['fieldsToNull'] = fieldsToNull
-     
+
      sObjectsCopy = copy.deepcopy(sObjects)
      if isinstance(sObjectsCopy,dict):
          _doPrep(sObjectsCopy)
@@ -439,7 +439,6 @@ def _prepareSObjects(sObjects):
          for listitems in sObjectsCopy:
              _doPrep(listitems)   
      return sObjectsCopy
-
 
 def _bool(val):
     return str(val) == 'true'
@@ -548,7 +547,7 @@ def isObject(xml):
             return False
     except KeyError:
         return False
-        
+
 def isQueryResult(xml):
     try:
         if xml(_tSchemaInstanceNS.type) == 'QueryResult':
