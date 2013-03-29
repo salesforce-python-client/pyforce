@@ -2,9 +2,13 @@ Changelog
 =========
 
 1.0 (2013-04-01)
+ * Rename beatbox to pyforce
+ * Support embedded dictionaries in python objects submitted to the python
+   client
+ * Rename writeStringElement method to writeElement for more accuracy in name
 
 Beatbox forked as Pyforce
-------------------------
+-------------------------
 
 20.0 (2010-11-30)
 -----------------

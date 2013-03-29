@@ -151,7 +151,9 @@ class BeatBoxXmlGenerator(XMLGenerator):
             self._out.write(' %s=%s' % (self.makeName(name), quoteattr(value)))
         self._out.write('>')
 
-# general purpose xml writer, does a bunch of useful stuff above & beyond XmlGenerator
+# General purpose xml writer.
+# Does a bunch of useful stuff above & beyond XmlGenerator
+# TODO: What does it do, beyond XMLGenerator?
 class XmlWriter:
     def __init__(self, doGzip):
         self.__buf = StringIO("")
@@ -175,19 +177,22 @@ class XmlWriter:
         self.xg.startElementNS((namespace, name), name, attrs)
         self.__elems.append((namespace, name))
 
-    # if value is a list, then it writes out repeating elements, one for each value
-    def writeStringElement(self, namespace, name, value, attrs = _noAttrs):
+    # General Function for writing an XML Element.
+    # Detects the type of the element, and handles each type appropriately.
+    # i.e. If a list, then it encodes each element, if a dict, it writes an 
+    # embedded element.
+    def writeElement(self, namespace, name, value, attrs = _noAttrs):
         if islst(value):
             for v in value:
-                self.writeStringElement(namespace, name, v, attrs)
+                self.writeElement(namespace, name, v, attrs)
         elif isinstance(value, dict):
             self.startElement(namespace, name, attrs)
             # Type must always come first, even in embedded objects.
             type_entry = value['type']
-            self.writeStringElement(namespace, 'type', type_entry, attrs)
+            self.writeElement(namespace, 'type', type_entry, attrs)
             del value['type']
             for k, v in value.items():
-                self.writeStringElement(namespace, k, v, attrs)
+                self.writeElement(namespace, k, v, attrs)
             self.endElement()
         else:
             self.startElement(namespace, name, attrs)
@@ -201,12 +206,8 @@ class XmlWriter:
 
     def characters(self, s):
         # todo base64 ?
-        if isinstance(s, datetime.datetime):
-            # todo, timezones
+        if isinstance(s, datetime.datetime) or isinstance(s, datetime.date):
             s = s.isoformat()
-        elif isinstance(s, datetime.date):
-            # todo, try isoformat
-            s = "%04d-%02d-%02d" % (s.year, s.month, s.day)
         elif isinstance(s, (int, float, long)):
             s = str(s)
         self.xg.characters(s)
@@ -274,7 +275,7 @@ class SoapEnvelope:
         s.startElement(_envNs, "Header")
         s.characters("\n")
         s.startElement(_partnerNs, "CallOptions")
-        s.writeStringElement(_partnerNs, "client", self.clientId)
+        s.writeElement(_partnerNs, "client", self.clientId)
         s.endElement()
         s.characters("\n")
         self.writeHeaders(s)
@@ -287,17 +288,16 @@ class SoapEnvelope:
         s.endElement()  # body
         return s.endDocument()
 
-    # does all the grunt work,
-    #   serializes the request,
-    #   makes a http request,
-    #   passes the response to tramp
-    #   checks for soap fault
-    #   todo: check for mU='1' headers
-    #   returns the relevant result from the body child
+    # does all the grunt work:
+    # * serializes the request
+    # * makes a http request
+    # * passes the response to tramp
+    # * checks for soap fault
+    #  returns the relevant result from the body child
+    # TODO: check for mU='1' headers
     def post(self, conn=None, alwaysReturnList=False):
-        _logger.debug(self.__class__)
-        headers = { "User-Agent": "BeatBox/" + __version__,
-                "SOAPAction": "\"\"",
+        headers = { "User-Agent": "Pyforce/{0}".format(__version__),
+                "SOAPAction": '""',
                 "Content-Type": "text/xml; charset=utf-8" }
         if gzipResponse:
             headers['accept-encoding'] = 'gzip'
@@ -355,8 +355,8 @@ class LoginRequest(SoapEnvelope):
         self.__password = password
 
     def writeBody(self, s):
-        s.writeStringElement(_partnerNs, "username", self.__username)
-        s.writeStringElement(_partnerNs, "password", self.__password)
+        s.writeElement(_partnerNs, "username", self.__username)
+        s.writeElement(_partnerNs, "password", self.__password)
 
 
 # base class for all methods that require a sessionId
@@ -367,7 +367,7 @@ class AuthenticatedRequest(SoapEnvelope):
 
     def writeHeaders(self, s):
         s.startElement(_partnerNs, "SessionHeader")
-        s.writeStringElement(_partnerNs, "sessionId", self.sessionId)
+        s.writeElement(_partnerNs, "sessionId", self.sessionId)
         s.endElement()
 
     def writeSObjects(self, s, sObjects, elemName="sObjects"):
@@ -377,10 +377,10 @@ class AuthenticatedRequest(SoapEnvelope):
         else:
             s.startElement(_partnerNs, elemName)
             # type has to go first
-            s.writeStringElement(_sobjectNs, "type", sObjects['type'])
+            s.writeElement(_sobjectNs, "type", sObjects['type'])
             for fn in sObjects.keys():
                 if (fn != 'type'):
-                    s.writeStringElement(_sobjectNs, fn, sObjects[fn])
+                    s.writeElement(_sobjectNs, fn, sObjects[fn])
             s.endElement()
 
 
@@ -392,7 +392,7 @@ class QueryOptionsRequest(AuthenticatedRequest):
     def writeHeaders(self, s):
         AuthenticatedRequest.writeHeaders(self, s)
         s.startElement(_partnerNs, "QueryOptions")
-        s.writeStringElement(_partnerNs, "batchSize", self.batchSize)
+        s.writeElement(_partnerNs, "batchSize", self.batchSize)
         s.endElement()
 
 
@@ -402,7 +402,7 @@ class QueryRequest(QueryOptionsRequest):
         self.__query = soql
 
     def writeBody(self, s):
-        s.writeStringElement(_partnerNs, "queryString", self.__query)
+        s.writeElement(_partnerNs, "queryString", self.__query)
 
 
 class QueryMoreRequest(QueryOptionsRequest):
@@ -411,7 +411,7 @@ class QueryMoreRequest(QueryOptionsRequest):
         self.__queryLocator = queryLocator
 
     def writeBody(self, s):
-        s.writeStringElement(_partnerNs, "queryLocator", self.__queryLocator)
+        s.writeElement(_partnerNs, "queryLocator", self.__queryLocator)
 
 
 class SearchRequest(QueryOptionsRequest):
@@ -420,7 +420,7 @@ class SearchRequest(QueryOptionsRequest):
         self.__search = sosl
 
     def writeBody(self, s):
-        s.writeStringElement(_partnerNs, "searchString", self.__search)
+        s.writeElement(_partnerNs, "searchString", self.__search)
 
 
 class GetUpdatedRequest(AuthenticatedRequest):
@@ -431,9 +431,9 @@ class GetUpdatedRequest(AuthenticatedRequest):
         self.__end = end;
 
     def writeBody(self, s):
-        s.writeStringElement(_partnerNs, "sObjectType", self.__sObjectType)
-        s.writeStringElement(_partnerNs, "startDate", self.__start)
-        s.writeStringElement(_partnerNs, "endDate", self.__end)
+        s.writeElement(_partnerNs, "sObjectType", self.__sObjectType)
+        s.writeElement(_partnerNs, "startDate", self.__start)
+        s.writeElement(_partnerNs, "endDate", self.__end)
 
 
 class GetDeletedRequest(GetUpdatedRequest):
@@ -448,7 +448,7 @@ class UpsertRequest(AuthenticatedRequest):
         self.__sObjects = sObjects
 
     def writeBody(self, s):
-        s.writeStringElement(_partnerNs, "externalIDFieldName", self.__externalIdName)
+        s.writeElement(_partnerNs, "externalIDFieldName", self.__externalIdName)
         self.writeSObjects(s, self.__sObjects)
 
 
@@ -472,7 +472,7 @@ class DeleteRequest(AuthenticatedRequest):
         self.__ids = ids;
 
     def writeBody(self, s):
-        s.writeStringElement(_partnerNs, "id", self.__ids)
+        s.writeElement(_partnerNs, "id", self.__ids)
 
 
 class RetrieveRequest(AuthenticatedRequest):
@@ -483,9 +483,9 @@ class RetrieveRequest(AuthenticatedRequest):
         self.__ids = ids
 
     def writeBody(self, s):
-        s.writeStringElement(_partnerNs, "fieldList", self.__fields)
-        s.writeStringElement(_partnerNs, "sObjectType", self.__sObjectType);
-        s.writeStringElement(_partnerNs, "ids", self.__ids)
+        s.writeElement(_partnerNs, "fieldList", self.__fields)
+        s.writeElement(_partnerNs, "sObjectType", self.__sObjectType);
+        s.writeElement(_partnerNs, "ids", self.__ids)
 
 
 class ResetPasswordRequest(AuthenticatedRequest):
@@ -494,7 +494,7 @@ class ResetPasswordRequest(AuthenticatedRequest):
         self.__userId = userId
 
     def writeBody(self, s):
-        s.writeStringElement(_partnerNs, "userId", self.__userId)
+        s.writeElement(_partnerNs, "userId", self.__userId)
 
 
 class SetPasswordRequest(AuthenticatedRequest):
@@ -504,8 +504,8 @@ class SetPasswordRequest(AuthenticatedRequest):
         self.__password = password
 
     def writeBody(self, s):
-        s.writeStringElement(_partnerNs, "userId", self.__userId)
-        s.writeStringElement(_partnerNs, "password", self.__password)
+        s.writeElement(_partnerNs, "userId", self.__userId)
+        s.writeElement(_partnerNs, "password", self.__password)
 
 
 class DescribeSObjectsRequest(AuthenticatedRequest):
@@ -514,7 +514,7 @@ class DescribeSObjectsRequest(AuthenticatedRequest):
         self.__sObjectTypes = sObjectTypes
 
     def writeBody(self, s):
-        s.writeStringElement(_partnerNs, "sObjectType", self.__sObjectTypes)
+        s.writeElement(_partnerNs, "sObjectType", self.__sObjectTypes)
 
 
 class DescribeLayoutRequest(AuthenticatedRequest):
@@ -523,4 +523,4 @@ class DescribeLayoutRequest(AuthenticatedRequest):
         self.__sObjectType = sObjectType
 
     def writeBody(self, s):
-        s.writeStringElement(_partnerNs, "sObjectType", self.__sObjectType)
+        s.writeElement(_partnerNs, "sObjectType", self.__sObjectType)
