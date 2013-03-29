@@ -57,13 +57,15 @@ details)
 The pyforce client allows you to query with sfdc SOQL.
 
 Here's an example of a query for contacts with last name 'Doe':
-    >>> res = svc.query("SELECT Id, FirstName, LastName FROM Contact WHERE LastName='Doe'")
-    >>> res[0]
+
+    res = svc.query("SELECT Id, FirstName, LastName FROM Contact WHERE LastName='Doe'")
+    res[0]
     {'LastName': 'Doe', 'type': 'Contact', 'Id': '0037000000eRf6vAAC', 'FirstName': 'John'}
-    >>> res[0].Id
+    res[0].Id
     '0037000000eRf6vAAC'
 
 Add a new Lead:
+
     contact = {
             'type': 'Lead', 
             'LastName': 'Ian', 
@@ -77,6 +79,7 @@ Add a new Lead:
         raise Exception('Contact creation failed {0}'.format(res[0]['errors']))
 
 Batches work automatically (though sfdc limits the number to 200 maximum):
+
     contacts = [
         {
             'type': 'Lead', 
