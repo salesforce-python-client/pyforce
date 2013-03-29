@@ -1,0 +1,35 @@
+K 25
+svn:wc:ra_dav:version-url
+V 34
+/svn/!svn/ver/91/trunk/src/beatbox
+END
+__init__.py
+K 25
+svn:wc:ra_dav:version-url
+V 46
+/svn/!svn/ver/47/trunk/src/beatbox/__init__.py
+END
+python_client.py
+K 25
+svn:wc:ra_dav:version-url
+V 51
+/svn/!svn/ver/86/trunk/src/beatbox/python_client.py
+END
+marshall.py
+K 25
+svn:wc:ra_dav:version-url
+V 46
+/svn/!svn/ver/91/trunk/src/beatbox/marshall.py
+END
+_beatbox.py
+K 25
+svn:wc:ra_dav:version-url
+V 46
+/svn/!svn/ver/91/trunk/src/beatbox/_beatbox.py
+END
+xmltramp.py
+K 25
+svn:wc:ra_dav:version-url
+V 46
+/svn/!svn/ver/82/trunk/src/beatbox/xmltramp.py
+END
