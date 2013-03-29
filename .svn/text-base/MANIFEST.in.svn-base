@@ -1,3 +1,0 @@
-include *.txt
-recursive-include examples *.txt *.py
-prune src/beatbox/tests/sfconfig.py
