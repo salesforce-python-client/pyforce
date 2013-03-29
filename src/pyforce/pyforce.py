@@ -413,10 +413,13 @@ class Field(object):
 # ['one','two','three'] becomes 'one;two;three'
 def _prepareSObjects(sObjects):
      def _doPrep(field_dict):
-         """Do some prep work converting python types into formats that
-            Salesforce will accept. This includes converting lists of strings
-            to "apple;orange;pear" format as well as Null-ing any empty lists
-            or None values.
+         """
+         _doPrep is makes changes in-place.
+         Do some prep work converting python types into formats that
+         Salesforce will accept.
+         This includes converting lists of strings to "apple;orange;pear".
+         Dicts will be converted to embedded objects
+         None or empty list values will be Null-ed
          """
          fieldsToNull = []
          for k,v in field_dict.items():
@@ -426,6 +429,10 @@ def _prepareSObjects(sObjects):
              if hasattr(v,'__iter__'):
                  if len(v) == 0:
                      fieldsToNull.append(k)
+                 elif isinstance(v, dict):
+                     innerCopy = copy.deepcopy(v)
+                     _doPrep(innerCopy)
+                     field_dict[k] = innerCopy
                  else:
                      field_dict[k] = ";".join(v)
          if 'fieldsToNull' in field_dict:
@@ -434,10 +441,12 @@ def _prepareSObjects(sObjects):
 
      sObjectsCopy = copy.deepcopy(sObjects)
      if isinstance(sObjectsCopy,dict):
+        # If root element is a dict, then this is a single object not an array
          _doPrep(sObjectsCopy)
      else:
+         # else this is an array, and each elelment should be prepped.
          for listitems in sObjectsCopy:
-             _doPrep(listitems)   
+             _doPrep(listitems)
      return sObjectsCopy
 
 def _bool(val):
