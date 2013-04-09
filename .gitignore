@@ -1,1 +1,3 @@
 .svn
+*.pyc
+pyforce.egg-info

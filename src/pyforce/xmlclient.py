@@ -180,7 +180,7 @@ class XmlWriter:
         if islst(value):
             for v in value:
                 self.writeStringElement(namespace, name, v, attrs)
-        elif isinstance(v, dict):
+        elif isinstance(value, dict):
             self.startElement(namespace, name, attrs)
             # Type must always come first, even in embedded objects.
             type_entry = value['type']
