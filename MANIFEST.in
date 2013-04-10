@@ -1,3 +1,4 @@
 include *.txt
+include *.md
 recursive-include examples *.txt *.py
 prune src/pyforce/tests/sfconfig.py

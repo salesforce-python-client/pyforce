@@ -1,6 +1,9 @@
 Changelog
 =========
 
+1.01 (2013-04-10)
+ * Fix MANIFEST.in for releasing to pypi
+
 1.0 (2013-04-01)
  * Rename beatbox to pyforce
  * Support embedded dictionaries in python objects submitted to the python
