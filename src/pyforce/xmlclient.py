@@ -1,4 +1,4 @@
-__version__ = '1.0'
+__version__ = '1.1dev'
 __author__ = "Simon Fell et al. reluctantly forked by idbentley"
 __credits__ = "Mad shouts to the sforce possie"
 __copyright__ = "GNU GPL 2."
