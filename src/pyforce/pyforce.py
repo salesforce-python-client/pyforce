@@ -1,3 +1,4 @@
+import logging
 from xmlclient import _tPartnerNS, _tSObjectNS
 from xmlclient import Client as BaseClient
 from marshall import marshall
@@ -11,6 +12,8 @@ _tSchemaNS = Namespace('http://www.w3.org/2001/XMLSchema')
 
 DEFAULT_FIELD_TYPE = "string"
 querytyperegx = re.compile('(?:from|FROM) (\S+)')
+
+_logger = logging.getLogger("pyforce.{0}".format(__name__))
 
 class QueryRecord(dict):
 
@@ -235,6 +238,9 @@ class Client(BaseClient):
 
     def queryTypesDescriptions(self, types):
         """
+        Given a list of types, construct a dictionary such that
+        each key is a type, and each value is the corresponding sObject
+        for that type.
         """
         types = list(types)
         if types:
@@ -242,11 +248,15 @@ class Client(BaseClient):
         else:
             types_descs = []
         return dict(map(lambda t, d:(t, d), types, types_descs))
-
+e
     def _extractRecord(self, r):
+        _logger.debug("_extractRecord: {0}".format(r))
         record = QueryRecord()
         if r:
-            type_data = self.typeDescs[str(r[_tSObjectNS.type])]
+            row_type = str(r[_tSObjectNS.type])
+            _logger.debug("row type: {0}".format(row_type))
+            type_data = self.typeDescs[row_type]
+            _logger.debug("type data: {0}".format(type_data))
             for field in r:
                fname = str(field._name[1]) 
                if isObject(field):

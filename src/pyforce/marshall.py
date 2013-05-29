@@ -1,9 +1,10 @@
+import logging
 from xmlclient import _tPartnerNS, _tSObjectNS, _tSoapNS
 import pyforce
-
 from types import ListType, TupleType
-
 import datetime, re
+
+_logger = logging.getLogger("pyforce.{0}".format(__name__))
 
 dateregx = re.compile(r'(\d{4})-(\d{2})-(\d{2})')
 datetimeregx = re.compile(

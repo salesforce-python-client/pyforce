@@ -34,7 +34,7 @@ gzipRequest=True    # are we going to gzip the request ?
 gzipResponse=True   # are we going to tell teh server to gzip the response ?
 forceHttp=False     # force all connections to be HTTP, for debugging
 
-_logger = logging.getLogger('pyforce')
+_logger = logging.getLogger('pyforce.{0}'.format(__name__))
 
 def makeConnection(scheme, host):
     if forceHttp or scheme.upper() == 'HTTP':
