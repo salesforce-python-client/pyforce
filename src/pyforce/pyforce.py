@@ -70,7 +70,8 @@ class Client(BaseClient):
     def __init__(self, serverUrl=None, cacheTypeDescriptions=False):
         BaseClient.__init__(self, serverUrl=serverUrl)
         self.cacheTypeDescriptions = cacheTypeDescriptions
-        self.typeDescs = {}
+        if self.cacheTypeDescriptions:
+            self.typeDescs = {}
 
     def login(self, username, passwd):
         res = BaseClient.login(self, username, passwd)
@@ -248,21 +249,20 @@ class Client(BaseClient):
         else:
             types_descs = []
         return dict(map(lambda t, d:(t, d), types, types_descs))
-e
-    def _extractRecord(self, r):
-        _logger.debug("_extractRecord: {0}".format(r))
+
+    def _extractRecord(self, r, typeDescs):
         record = QueryRecord()
         if r:
             row_type = str(r[_tSObjectNS.type])
             _logger.debug("row type: {0}".format(row_type))
-            type_data = self.typeDescs[row_type]
+            type_data = typeDescs[row_type]
             _logger.debug("type data: {0}".format(type_data))
             for field in r:
                fname = str(field._name[1]) 
                if isObject(field):
-                   record[fname] = self._extractRecord(r[field._name:][0])
+                   record[fname] = self._extractRecord(r[field._name:][0], typeDescs)
                elif isQueryResult(field):
-                   record[fname] = QueryRecordSet(records=[self._extractRecord(rec) for rec in field[_tPartnerNS.records:]],
+                   record[fname] = QueryRecordSet(records=[self._extractRecord(rec, typeDescs) for rec in field[_tPartnerNS.records:]],
                                                   done=field[_tPartnerNS.done],
                                                   size=int(str(field[_tPartnerNS.size]))
                                                  )
@@ -270,10 +270,12 @@ e
                    record[fname] = type_data.marshall(fname, r)
         return record
 
-    def flushTypeDescriptionsCache(self):
-        self.typeDescs = {}
-
     def query(self, *args, **kw):
+        if self.cacheTypeDescriptions:
+            typeDescs = self.typeDescs
+        else:
+            typeDescs = {}
+
         if len(args) == 1: # full query string
             queryString = args[0]
         elif len(args) == 2: # BBB: fields, sObjectType
@@ -289,43 +291,48 @@ e
         res = BaseClient.query(self, queryString)
         # calculate the union of the sets of record types from each record
         types = reduce(lambda a,b: a|b, [getRecordTypes(r) for r in res[_tPartnerNS.records:]], set())
-        if not self.cacheTypeDescriptions:
-            self.flushTypeDescriptionsCache()
-        new_types = types - set(self.typeDescs.keys())
+        new_types = types - set(typeDescs.keys())
         if new_types:
-            self.typeDescs.update(self.queryTypesDescriptions(new_types))
-        data = QueryRecordSet(records=[self._extractRecord(r) for r in res[_tPartnerNS.records:]],
+            typeDescs.update(self.queryTypesDescriptions(new_types))
+        data = QueryRecordSet(records=[self._extractRecord(r, typeDescs) for r in res[_tPartnerNS.records:]],
                               done=_bool(res[_tPartnerNS.done]),
                               size=int(str(res[_tPartnerNS.size])),
                               queryLocator = str(res[_tPartnerNS.queryLocator]))
         return data
 
     def queryMore(self, queryLocator):
+        if self.cacheTypeDescriptions:
+            typeDescs = self.typeDescs
+        else:
+            typeDescs = {}
+
         locator = queryLocator
         res = BaseClient.queryMore(self, locator)
         # calculate the union of the sets of record types from each record
         types = reduce(lambda a,b: a|b, [getRecordTypes(r) for r in res[_tPartnerNS.records:]], set())
-        new_types = types - set(self.typeDescs.keys())
+        new_types = types - set(typeDescs.keys())
         if new_types:
-            self.typeDescs.update(self.queryTypesDescriptions(new_types))
-        data = QueryRecordSet(records=[self._extractRecord(r) for r in res[_tPartnerNS.records:]],
+            typeDescs.update(self.queryTypesDescriptions(new_types))
+        data = QueryRecordSet(records=[self._extractRecord(r, typeDescs) for r in res[_tPartnerNS.records:]],
                               done=_bool(res[_tPartnerNS.done]),
                               size=int(str(res[_tPartnerNS.size])),
                               queryLocator = str(res[_tPartnerNS.queryLocator]))
         return data
 
     def search(self, sosl):
+        if self.cacheTypeDescriptions:
+            typeDescs = self.typeDescs
+        else:
+            typeDescs = {}
         res = BaseClient.search(self, sosl)
 
-        if not self.cacheTypeDescriptions:
-            self.flushTypeDescriptionsCache()
         # calculate the union of the sets of record types from each record
         if len(res):
             types = reduce(lambda a,b: a|b, [getRecordTypes(r) for r in res[_tPartnerNS.searchRecords]], set())
-            new_types = types - set(self.typeDescs.keys())
+            new_types = types - set(typeDescs.keys())
             if new_types:
-                self.typeDescs.update(self.queryTypesDescriptions(new_types))
-            return [self._extractRecord(r) for r in res[_tPartnerNS.searchRecords]]
+                typeDescs.update(self.queryTypesDescriptions(new_types))
+            return [self._extractRecord(r, typeDescs) for r in res[_tPartnerNS.searchRecords]]
         else:
             return []
 
