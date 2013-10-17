@@ -141,15 +141,15 @@ class BeatBoxXmlGenerator(XMLGenerator):
         return self._current_context[name[0]] + ":" + name[1]
 
     def startElementNS(self, name, qname, attrs):
-        self._out.write('<' + self.makeName(name))
+        self._write(unicode('<' + self.makeName(name)))
 
         for pair in self._undeclared_ns_maps:
-            self._out.write(' xmlns:%s="%s"' % pair)
+            self._write(unicode(' xmlns:%s="%s"' % pair))
         self._undeclared_ns_maps = []
 
         for (name, value) in attrs.items():
-            self._out.write(' %s=%s' % (self.makeName(name), quoteattr(value)))
-        self._out.write('>')
+            self._write(unicode(' %s=%s' % (self.makeName(name), quoteattr(value))))
+        self._write(unicode('>'))
 
 # General purpose xml writer.
 # Does a bunch of useful stuff above & beyond XmlGenerator
@@ -179,7 +179,7 @@ class XmlWriter:
 
     # General Function for writing an XML Element.
     # Detects the type of the element, and handles each type appropriately.
-    # i.e. If a list, then it encodes each element, if a dict, it writes an 
+    # i.e. If a list, then it encodes each element, if a dict, it writes an
     # embedded element.
     def writeElement(self, namespace, name, value, attrs = _noAttrs):
         if islst(value):
@@ -255,7 +255,7 @@ class SoapWriter(XmlWriter):
         self.endPrefixMapping("o")
         self.endPrefixMapping("p")
         self.endPrefixMapping("s")
-        return XmlWriter.endDocument(self)  
+        return XmlWriter.endDocument(self)
 
 # processing for a single soap request / response
 class SoapEnvelope:
