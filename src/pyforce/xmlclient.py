@@ -133,6 +133,10 @@ class BeatBoxXmlGenerator(XMLGenerator):
     def __init__(self, destination, encoding):
         XMLGenerator.__init__(self, destination, encoding)
 
+        if self._out:
+            self._write = self._out.write
+            self._flush = self._out.flush
+
     def makeName(self, name):
         if name[0] is None:
             #if the name was not namespace-scoped, use the qualified part
