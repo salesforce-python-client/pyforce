@@ -1,4 +1,4 @@
-__version__ = '1.2'
+__version__ = '1.3'
 __author__ = "Simon Fell et al. reluctantly forked by idbentley"
 __copyright__ = "GNU GPL 2."
 
@@ -132,7 +132,7 @@ class BeatBoxXmlGenerator(XMLGenerator):
     def __init__(self, destination, encoding):
         XMLGenerator.__init__(self, destination, encoding)
 
-        if self._out:
+        if hasattr(self, '_out') and self._out:
             self._write = self._out.write
             self._flush = self._out.flush
 
