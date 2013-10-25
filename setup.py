@@ -2,7 +2,7 @@
 from setuptools import setup
 
 setup(name='pyforce',
-    version='1.1dev', # be sure to update the version in pyforce.py too
+    version='1.2', # be sure to update the version in pyforce.py too
     package_dir={'': 'src'},
     packages=['pyforce'],
     author = "Simon Fell et al.  reluctantly Forked by idbentley",

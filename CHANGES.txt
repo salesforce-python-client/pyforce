@@ -1,6 +1,11 @@
 Changelog
 =========
 
+1.2 (2013-10-25)
+ * Two bugfixes for supporting Python 2.7
+ * Fix some dos encoding issues
+ Thanks to: @lociii and @gabber7
+
 1.01 (2013-04-10)
  * Fix MANIFEST.in for releasing to pypi
 
