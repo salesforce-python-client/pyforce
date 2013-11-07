@@ -1,6 +1,9 @@
 Changelog
 =========
 
+1.3 (2013-11-7)
+ Bugfix introduced in 1.2
+ 
 1.2 (2013-10-25)
  * Two bugfixes for supporting Python 2.7
  * Fix some dos encoding issues
