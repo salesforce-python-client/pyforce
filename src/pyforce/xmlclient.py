@@ -42,7 +42,7 @@ def makeConnection(scheme, host):
 
 
 # the main sforce client proxy class
-class Client:
+class Client(object):
     def __init__(self, serverUrl=None):
         self.batchSize = 500
         self.serverUrl = serverUrl or DEFAULT_SERVER_URL
@@ -157,7 +157,7 @@ class BeatBoxXmlGenerator(XMLGenerator):
 # General purpose xml writer.
 # Does a bunch of useful stuff above & beyond XmlGenerator
 # TODO: What does it do, beyond XMLGenerator?
-class XmlWriter:
+class XmlWriter(object):
     def __init__(self, doGzip):
         self.__buf = StringIO("")
         if doGzip:
@@ -261,7 +261,7 @@ class SoapWriter(XmlWriter):
         return XmlWriter.endDocument(self)
 
 # processing for a single soap request / response
-class SoapEnvelope:
+class SoapEnvelope(object):
     def __init__(self, serverUrl, operationName, clientId="BeatBox/" + __version__):
         self.serverUrl = serverUrl
         self.operationName = operationName

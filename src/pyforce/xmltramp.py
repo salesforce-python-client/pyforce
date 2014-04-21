@@ -17,7 +17,7 @@ def quote(x, elt=True):
     if not elt: x = x.replace('"', '&quot;')
     return x
 
-class Element:
+class Element(object):
     def __init__(self, name, attrs=None, children=None, prefixes=None):
         if islst(name) and name[0] == None: name = name[1]
         if attrs:
@@ -198,7 +198,7 @@ class Element:
 
     def __len__(self): return len(self._dir)
 
-class Namespace:
+class Namespace(object):
     def __init__(self, uri): self.__uri = uri
     def __getattr__(self, n): return (self.__uri, n)
     def __getitem__(self, n): return (self.__uri, n)
