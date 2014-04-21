@@ -43,9 +43,9 @@ def makeConnection(scheme, host):
 
 # the main sforce client proxy class
 class Client(object):
-    def __init__(self, serverUrl=None):
+    def __init__(self, authServerUrl=None):
         self.batchSize = 500
-        self.serverUrl = serverUrl or DEFAULT_SERVER_URL
+        self.authServerUrl = authServerUrl or AUTHENTICATION_SERVER_URL
         self.__conn = None
 
     def __del__(self):
@@ -247,7 +247,7 @@ class SessionTimeoutError(Exception):
 # soap specific stuff ontop of XmlWriter
 class SoapWriter(XmlWriter):
     def __init__(self):
-        XmlWriter.__init__(self, gzipRequest)
+        super(SoapWriter, self).__init__(gzipRequest)
         self.startPrefixMapping("s", _envNs)
         self.startPrefixMapping("p", _partnerNs)
         self.startPrefixMapping("o", _sobjectNs)
@@ -258,11 +258,11 @@ class SoapWriter(XmlWriter):
         self.endPrefixMapping("o")
         self.endPrefixMapping("p")
         self.endPrefixMapping("s")
-        return XmlWriter.endDocument(self)
+        return super(SoapWriter, self).endDocument()
 
 # processing for a single soap request / response
 class SoapEnvelope(object):
-    def __init__(self, serverUrl, operationName, clientId="BeatBox/" + __version__):
+    def __init__(self, serverUrl, operationName, clientId="pyforce/" + __version__):
         self.serverUrl = serverUrl
         self.operationName = operationName
         self.clientId = clientId
@@ -353,7 +353,7 @@ class SoapEnvelope(object):
 
 class LoginRequest(SoapEnvelope):
     def __init__(self, serverUrl, username, password):
-        SoapEnvelope.__init__(self, serverUrl, "login")
+        super(LoginRequest, self).__init__(serverUrl, "login")
         self.__username = username
         self.__password = password
 
@@ -365,7 +365,7 @@ class LoginRequest(SoapEnvelope):
 # base class for all methods that require a sessionId
 class AuthenticatedRequest(SoapEnvelope):
     def __init__(self, serverUrl, sessionId, operationName):
-        SoapEnvelope.__init__(self, serverUrl, operationName)
+        super(AuthenticatedRequest, self).__init__(serverUrl, operationName)
         self.sessionId = sessionId
 
     def writeHeaders(self, s):
@@ -389,11 +389,11 @@ class AuthenticatedRequest(SoapEnvelope):
 
 class QueryOptionsRequest(AuthenticatedRequest):
     def __init__(self, serverUrl, sessionId, batchSize, operationName):
-        AuthenticatedRequest.__init__(self, serverUrl, sessionId, operationName)
+        super(QueryOptionsRequest, self).__init__(serverUrl, sessionId, operationName)
         self.batchSize = batchSize
 
     def writeHeaders(self, s):
-        AuthenticatedRequest.writeHeaders(self, s)
+        super(QueryOptionsRequest, self).writeHeaders(s)
         s.startElement(_partnerNs, "QueryOptions")
         s.writeElement(_partnerNs, "batchSize", self.batchSize)
         s.endElement()
@@ -401,7 +401,7 @@ class QueryOptionsRequest(AuthenticatedRequest):
 
 class QueryRequest(QueryOptionsRequest):
     def __init__(self, serverUrl, sessionId, batchSize, soql):
-        QueryOptionsRequest.__init__(self, serverUrl, sessionId, batchSize, "query")
+        super(QueryRequest, self).__init__(serverUrl, sessionId, batchSize, "query")
         self.__query = soql
 
     def writeBody(self, s):
@@ -410,7 +410,7 @@ class QueryRequest(QueryOptionsRequest):
 
 class QueryMoreRequest(QueryOptionsRequest):
     def __init__(self, serverUrl, sessionId, batchSize, queryLocator):
-        QueryOptionsRequest.__init__(self, serverUrl, sessionId, batchSize, "queryMore")
+        super(QueryMoreRequest, self).__init__(serverUrl, sessionId, batchSize, "queryMore")
         self.__queryLocator = queryLocator
 
     def writeBody(self, s):
@@ -419,7 +419,7 @@ class QueryMoreRequest(QueryOptionsRequest):
 
 class SearchRequest(QueryOptionsRequest):
     def __init__(self, serverUrl, sessionId, batchSize, sosl):
-        QueryOptionsRequest.__init__(self, serverUrl, sessionId, batchSize, "search")
+        super(SearchRequest, self).__init__(serverUrl, sessionId, batchSize, "search")
         self.__search = sosl
 
     def writeBody(self, s):
@@ -428,7 +428,7 @@ class SearchRequest(QueryOptionsRequest):
 
 class GetUpdatedRequest(AuthenticatedRequest):
     def __init__(self, serverUrl, sessionId, sObjectType, start, end, operationName="getUpdated"):
-        AuthenticatedRequest.__init__(self, serverUrl, sessionId, operationName)
+        super(GetUpdatedRequest, self).__init__(serverUrl, sessionId, operationName)
         self.__sObjectType = sObjectType
         self.__start = start;
         self.__end = end;
@@ -446,7 +446,7 @@ class GetDeletedRequest(GetUpdatedRequest):
 
 class UpsertRequest(AuthenticatedRequest):
     def __init__(self, serverUrl, sessionId, externalIdName, sObjects):
-        AuthenticatedRequest.__init__(self, serverUrl, sessionId, "upsert")
+        super(UpsertRequest, self).__init__(serverUrl, sessionId, "upsert")
         self.__externalIdName = externalIdName
         self.__sObjects = sObjects
 
@@ -457,7 +457,7 @@ class UpsertRequest(AuthenticatedRequest):
 
 class UpdateRequest(AuthenticatedRequest):
     def __init__(self, serverUrl, sessionId, sObjects, operationName="update"):
-        AuthenticatedRequest.__init__(self, serverUrl, sessionId, operationName)
+        super(UpdateRequest, self).__init__(serverUrl, sessionId, operationName)
         self.__sObjects = sObjects
 
     def writeBody(self, s):
@@ -471,7 +471,7 @@ class CreateRequest(UpdateRequest):
 
 class DeleteRequest(AuthenticatedRequest):
     def __init__(self, serverUrl, sessionId, ids):
-        AuthenticatedRequest.__init__(self, serverUrl, sessionId, "delete")
+        super(DeleteRequest, self).__init__(serverUrl, sessionId, "delete")
         self.__ids = ids;
 
     def writeBody(self, s):
@@ -480,7 +480,7 @@ class DeleteRequest(AuthenticatedRequest):
 
 class RetrieveRequest(AuthenticatedRequest):
     def __init__(self, serverUrl, sessionId, fields, sObjectType, ids):
-        AuthenticatedRequest.__init__(self, serverUrl, sessionId, "retrieve")
+        super(RetrieveRequest, self).__init__(serverUrl, sessionId, "retrieve")
         self.__fields = fields
         self.__sObjectType = sObjectType
         self.__ids = ids
@@ -493,7 +493,7 @@ class RetrieveRequest(AuthenticatedRequest):
 
 class ResetPasswordRequest(AuthenticatedRequest):
     def __init__(self, serverUrl, sessionId, userId):
-        AuthenticatedRequest.__init__(self, serverUrl, sessionId, "resetPassword")
+        super(ResetPasswordRequest, self).__init__(serverUrl, sessionId, "resetPassword")
         self.__userId = userId
 
     def writeBody(self, s):
@@ -502,7 +502,7 @@ class ResetPasswordRequest(AuthenticatedRequest):
 
 class SetPasswordRequest(AuthenticatedRequest):
     def __init__(self, serverUrl, sessionId, userId, password):
-        AuthenticatedRequest.__init__(self, serverUrl, sessionId, "setPassword")
+        super(SetPasswordRequest, self).__init__(serverUrl, sessionId, "setPassword")
         self.__userId = userId
         self.__password = password
 
@@ -513,7 +513,7 @@ class SetPasswordRequest(AuthenticatedRequest):
 
 class DescribeSObjectsRequest(AuthenticatedRequest):
     def __init__(self, serverUrl, sessionId, sObjectTypes):
-        AuthenticatedRequest.__init__(self, serverUrl, sessionId, "describeSObjects")
+        super(DescribeSObjectsRequest, self).__init__(serverUrl, sessionId, "describeSObjects")
         self.__sObjectTypes = sObjectTypes
 
     def writeBody(self, s):
@@ -522,7 +522,7 @@ class DescribeSObjectsRequest(AuthenticatedRequest):
 
 class DescribeLayoutRequest(AuthenticatedRequest):
     def __init__(self, serverUrl, sessionId, sObjectType):
-        AuthenticatedRequest.__init__(self, serverUrl, sessionId, "describeLayout")
+        super(DescribeLayoutRequest, self).__init__(serverUrl, sessionId, "describeLayout")
         self.__sObjectType = sObjectType
 
     def writeBody(self, s):

@@ -68,13 +68,13 @@ class Client(BaseClient):
     cacheTypeDescriptions = False
 
     def __init__(self, serverUrl=None, cacheTypeDescriptions=False):
-        BaseClient.__init__(self, serverUrl=serverUrl)
+        super(Client, self).__init__(serverUrl=serverUrl)
         self.cacheTypeDescriptions = cacheTypeDescriptions
         if self.cacheTypeDescriptions:
             self.typeDescs = {}
 
     def login(self, username, passwd):
-        res = BaseClient.login(self, username, passwd)
+        res = super(Client, self).login(username, passwd)
         data = dict()
         data['passwordExpired'] = _bool(res[_tPartnerNS.passwordExpired])
         data['serverUrl'] = str(res[_tPartnerNS.serverUrl])
@@ -90,7 +90,7 @@ class Client(BaseClient):
         return False
 
     def describeGlobal(self):
-        res = BaseClient.describeGlobal(self)
+        res = super(Client, self).describeGlobal()
         data = dict()
         data['encoding'] = str(res[_tPartnerNS.encoding])
         data['maxBatchSize'] = int(str(res[_tPartnerNS.maxBatchSize]))
@@ -132,7 +132,7 @@ class Client(BaseClient):
         return data
 
     def describeSObjects(self, sObjectTypes):
-        res = BaseClient.describeSObjects(self, sObjectTypes)
+        res = super(Client, self).describeSObjects(sObjectTypes)
         if type(res) not in (TupleType, ListType):
             res = [res]
         data = list()
@@ -185,7 +185,7 @@ class Client(BaseClient):
 
     def create(self, sObjects):
         preparedObjects = _prepareSObjects(sObjects)
-        res = BaseClient.create(self, preparedObjects)
+        res = super(Client, self).create(preparedObjects)
         if type(res) not in (TupleType, ListType):
             res = [res]
         data = list()
@@ -202,7 +202,7 @@ class Client(BaseClient):
         return data
 
     def retrieve(self, fields, sObjectType, ids):
-        resultSet = BaseClient.retrieve(self, fields, sObjectType, ids)
+        resultSet = super(Client, self).retrieve(fields, sObjectType, ids)
         type_data = self.describeSObjects(sObjectType)[0]
 
         if type(resultSet) not in (TupleType, ListType):
@@ -221,7 +221,7 @@ class Client(BaseClient):
 
     def update(self, sObjects):
         preparedObjects = _prepareSObjects(sObjects)
-        res = BaseClient.update(self, preparedObjects)
+        res = super(Client, self).update(preparedObjects)
         if type(res) not in (TupleType, ListType):
             res = [res]
         data = list()
@@ -288,7 +288,7 @@ class Client(BaseClient):
         else:
             raise RuntimeError, "Wrong number of arguments to query method."
 
-        res = BaseClient.query(self, queryString)
+        res = super(Client, self).query(queryString)
         # calculate the union of the sets of record types from each record
         types = reduce(lambda a,b: a|b, [getRecordTypes(r) for r in res[_tPartnerNS.records:]], set())
         new_types = types - set(typeDescs.keys())
@@ -307,7 +307,7 @@ class Client(BaseClient):
             typeDescs = {}
 
         locator = queryLocator
-        res = BaseClient.queryMore(self, locator)
+        res = super(Client, self).queryMore(locator)
         # calculate the union of the sets of record types from each record
         types = reduce(lambda a,b: a|b, [getRecordTypes(r) for r in res[_tPartnerNS.records:]], set())
         new_types = types - set(typeDescs.keys())
@@ -324,7 +324,7 @@ class Client(BaseClient):
             typeDescs = self.typeDescs
         else:
             typeDescs = {}
-        res = BaseClient.search(self, sosl)
+        res = super(Client, self).search(sosl)
 
         # calculate the union of the sets of record types from each record
         if len(res):
@@ -337,7 +337,7 @@ class Client(BaseClient):
             return []
 
     def delete(self, ids):
-        res = BaseClient.delete(self, ids)
+        res = super(Client, self).delete(ids)
         if type(res) not in (TupleType, ListType):
             res = [res]
         data = list()
@@ -355,7 +355,7 @@ class Client(BaseClient):
 
     def upsert(self, externalIdName, sObjects):
         preparedObjects = _prepareSObjects(sObjects)
-        res = BaseClient.upsert(self, externalIdName, preparedObjects)
+        res = super(Client, self).upsert(externalIdName, preparedObjects)
         if type(res) not in (TupleType, ListType):
             res = [res]
         data = list()
@@ -373,7 +373,7 @@ class Client(BaseClient):
         return data
 
     def getDeleted(self, sObjectType, start, end):
-        res = BaseClient.getDeleted(self, sObjectType, start, end)
+        res = super(Client, self).getDeleted(sObjectType, start, end)
         res = res[_tPartnerNS.deletedRecords:]
         if type(res) not in (TupleType, ListType):
             res = [res]
@@ -387,19 +387,19 @@ class Client(BaseClient):
         return data
 
     def getUpdated(self, sObjectType, start, end):
-        res = BaseClient.getUpdated(self, sObjectType, start, end)
+        res = super(Client, self).getUpdated(sObjectType, start, end)
         res = res[_tPartnerNS.ids:]
         if type(res) not in (TupleType, ListType):
             res = [res]
         return [str(r) for r in res]
 
     def getUserInfo(self):
-        res = BaseClient.getUserInfo(self)
+        res = super(Client, self).getUserInfo()
         data = _extractUserInfo(res)
         return data
 
     def describeTabs(self):
-        res = BaseClient.describeTabs(self)
+        res = super(Client, self).describeTabs()
         data = list()
         for r in res:
             tabs = [_extractTab(t) for t in r[_tPartnerNS.tabs:]]

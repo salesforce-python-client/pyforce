@@ -1,13 +1,14 @@
 Changelog
 =========
 
-1.4 (2014 04-21)
+1.4 (2014-04-22)
  * Update xmltramp to use new-style classes
 
 1.3 (2013-11-7)
  Bugfix introduced in 1.2
  
 1.2 (2013-10-25)
+ * Don't use this version
  * Two bugfixes for supporting Python 2.7
  * Fix some dos encoding issues
  Thanks to: @lociii and @gabber7
