@@ -21,7 +21,7 @@ _sobjectNs = "urn:sobject.partner.soap.sforce.com"
 _envNs = "http://schemas.xmlsoap.org/soap/envelope/"
 _noAttrs = AttributesNSImpl({}, {})
 
-DEFAULT_SERVER_URL = 'https://login.salesforce.com/services/Soap/u/20.0'
+AUTHENTICATION_SERVER_URL = 'https://login.salesforce.com/services/Soap/u/30.0'
 
 # global constants for xmltramp namespaces, used to access response data
 _tPartnerNS = xmltramp.Namespace(_partnerNs)
@@ -43,9 +43,9 @@ def makeConnection(scheme, host):
 
 # the main sforce client proxy class
 class Client(object):
-    def __init__(self, authServerUrl=None):
+    def __init__(self, auth_server_url=None):
         self.batchSize = 500
-        self.authServerUrl = authServerUrl or AUTHENTICATION_SERVER_URL
+        self.auth_server_url = auth_server_url or AUTHENTICATION_SERVER_URL
         self.__conn = None
 
     def __del__(self):
@@ -54,76 +54,76 @@ class Client(object):
 
     # login, the serverUrl and sessionId are automatically handled, returns the loginResult structure
     def login(self, username, password):
-        lr = LoginRequest(self.serverUrl, username, password).post()
+        lr = LoginRequest(self.auth_server_url, username, password).post()
         self.useSession(str(lr[_tPartnerNS.sessionId]), str(lr[_tPartnerNS.serverUrl]))
         return lr
 
     # initialize from an existing sessionId & serverUrl, useful if we're being launched via a custom link
     def useSession(self, sessionId, serverUrl):
+        self.serverUrl = serverUrl
         self.sessionId = sessionId
-        self.__serverUrl = serverUrl
-        (scheme, host, path, params, query, frag) = urlparse(self.__serverUrl)
+        (scheme, host, path, params, query, frag) = urlparse(self.serverUrl)
         self.__conn = makeConnection(scheme, host)
 
     # set the batchSize property on the Client instance to change the batchsize for query/queryMore
     def query(self, soql):
-        return QueryRequest(self.__serverUrl, self.sessionId, self.batchSize, soql).post(self.__conn)
+        return QueryRequest(self.serverUrl, self.sessionId, self.batchSize, soql).post(self.__conn)
 
     def queryMore(self, queryLocator):
-        return QueryMoreRequest(self.__serverUrl, self.sessionId, self.batchSize, queryLocator).post(self.__conn)
+        return QueryMoreRequest(self.serverUrl, self.sessionId, self.batchSize, queryLocator).post(self.__conn)
 
     def search(self, sosl):
-        return SearchRequest(self.__serverUrl, self.sessionId, self.batchSize, sosl).post(self.__conn)
+        return SearchRequest(self.serverUrl, self.sessionId, self.batchSize, sosl).post(self.__conn)
 
     def getUpdated(self, sObjectType, start, end):
-        return GetUpdatedRequest(self.__serverUrl, self.sessionId, sObjectType, start, end).post(self.__conn)
+        return GetUpdatedRequest(self.serverUrl, self.sessionId, sObjectType, start, end).post(self.__conn)
 
     def getDeleted(self, sObjectType, start, end):
-        return GetDeletedRequest(self.__serverUrl, self.sessionId, sObjectType, start, end).post(self.__conn)
+        return GetDeletedRequest(self.serverUrl, self.sessionId, sObjectType, start, end).post(self.__conn)
 
     def retrieve(self, fields, sObjectType, ids):
-        return RetrieveRequest(self.__serverUrl, self.sessionId, fields, sObjectType, ids).post(self.__conn)
+        return RetrieveRequest(self.serverUrl, self.sessionId, fields, sObjectType, ids).post(self.__conn)
 
     # sObjects can be 1 or a list, returns a single save result or a list
     def create(self, sObjects):
-        return CreateRequest(self.__serverUrl, self.sessionId, sObjects).post(self.__conn)
+        return CreateRequest(self.serverUrl, self.sessionId, sObjects).post(self.__conn)
 
     # sObjects can be 1 or a list, returns a single save result or a list
     def update(self, sObjects):
-        return UpdateRequest(self.__serverUrl, self.sessionId, sObjects).post(self.__conn)
+        return UpdateRequest(self.serverUrl, self.sessionId, sObjects).post(self.__conn)
 
     # sObjects can be 1 or a list, returns a single upsert result or a list
     def upsert(self, externalIdName, sObjects):
-        return UpsertRequest(self.__serverUrl, self.sessionId, externalIdName, sObjects).post(self.__conn)
+        return UpsertRequest(self.serverUrl, self.sessionId, externalIdName, sObjects).post(self.__conn)
 
     # ids can be 1 or a list, returns a single delete result or a list
     def delete(self, ids):
-        return DeleteRequest(self.__serverUrl, self.sessionId, ids).post(self.__conn)
+        return DeleteRequest(self.serverUrl, self.sessionId, ids).post(self.__conn)
 
     # sObjectTypes can be 1 or a list, returns a single describe result or a list of them
     def describeSObjects(self, sObjectTypes):
-        return DescribeSObjectsRequest(self.__serverUrl, self.sessionId, sObjectTypes).post(self.__conn)
+        return DescribeSObjectsRequest(self.serverUrl, self.sessionId, sObjectTypes).post(self.__conn)
 
     def describeGlobal(self):
-        return AuthenticatedRequest(self.__serverUrl, self.sessionId, "describeGlobal").post(self.__conn)
+        return AuthenticatedRequest(self.serverUrl, self.sessionId, "describeGlobal").post(self.__conn)
 
     def describeLayout(self, sObjectType):
-        return DescribeLayoutRequest(self.__serverUrl, self.sessionId, sObjectType).post(self.__conn)
+        return DescribeLayoutRequest(self.serverUrl, self.sessionId, sObjectType).post(self.__conn)
 
     def describeTabs(self):
-        return AuthenticatedRequest(self.__serverUrl, self.sessionId, "describeTabs").post(self.__conn, True)
+        return AuthenticatedRequest(self.serverUrl, self.sessionId, "describeTabs").post(self.__conn, True)
 
     def getServerTimestamp(self):
-        return str(AuthenticatedRequest(self.__serverUrl, self.sessionId, "getServerTimestamp").post(self.__conn)[_tPartnerNS.timestamp])
+        return str(AuthenticatedRequest(self.serverUrl, self.sessionId, "getServerTimestamp").post(self.__conn)[_tPartnerNS.timestamp])
 
     def resetPassword(self, userId):
-        return ResetPasswordRequest(self.__serverUrl, self.sessionId, userId).post(self.__conn)
+        return ResetPasswordRequest(self.serverUrl, self.sessionId, userId).post(self.__conn)
 
     def setPassword(self, userId, password):
-        SetPasswordRequest(self.__serverUrl, self.sessionId, userId, password).post(self.__conn)
+        SetPasswordRequest(self.serverUrl, self.sessionId, userId, password).post(self.__conn)
 
     def getUserInfo(self):
-        return AuthenticatedRequest(self.__serverUrl, self.sessionId, "getUserInfo").post(self.__conn)
+        return AuthenticatedRequest(self.serverUrl, self.sessionId, "getUserInfo").post(self.__conn)
 
     #def convertLead(self, convertLeads):
 

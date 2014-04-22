@@ -67,8 +67,8 @@ class Client(BaseClient):
 
     cacheTypeDescriptions = False
 
-    def __init__(self, serverUrl=None, cacheTypeDescriptions=False):
-        super(Client, self).__init__(serverUrl=serverUrl)
+    def __init__(self, auth_server_url=None, cacheTypeDescriptions=False):
+        super(Client, self).__init__(auth_server_url=auth_server_url)
         self.cacheTypeDescriptions = cacheTypeDescriptions
         if self.cacheTypeDescriptions:
             self.typeDescs = {}
