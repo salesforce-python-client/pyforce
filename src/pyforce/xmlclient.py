@@ -1,4 +1,4 @@
-__version__ = '1.3'
+__version__ = '1.4'
 __author__ = "Simon Fell et al. reluctantly forked by idbentley"
 __copyright__ = "GNU GPL 2."
 
@@ -125,7 +125,8 @@ class Client:
     def getUserInfo(self):
         return AuthenticatedRequest(self.__serverUrl, self.sessionId, "getUserInfo").post(self.__conn)
 
-    #def convertLead(self, convertLeads):
+    def convertLeads(self, convertLeads):
+        return ConvertLeadsRequest(self.__serverUrl, self.sessionId, convertLeads).post(self.__conn)
 
 # fixed version of XmlGenerator, handles unqualified attributes correctly
 class BeatBoxXmlGenerator(XMLGenerator):
@@ -190,10 +191,11 @@ class XmlWriter:
                 self.writeElement(namespace, name, v, attrs)
         elif isinstance(value, dict):
             self.startElement(namespace, name, attrs)
-            # Type must always come first, even in embedded objects.
-            type_entry = value['type']
-            self.writeElement(namespace, 'type', type_entry, attrs)
-            del value['type']
+            if 'type' in value:
+                # Type must always come first, even in embedded objects.
+                type_entry = value['type']
+                self.writeElement(namespace, 'type', type_entry, attrs)
+                del value['type']
             for k, v in value.items():
                 self.writeElement(namespace, k, v, attrs)
             self.endElement()
@@ -489,6 +491,15 @@ class RetrieveRequest(AuthenticatedRequest):
         s.writeElement(_partnerNs, "fieldList", self.__fields)
         s.writeElement(_partnerNs, "sObjectType", self.__sObjectType);
         s.writeElement(_partnerNs, "ids", self.__ids)
+
+
+class ConvertLeadsRequest(AuthenticatedRequest):
+    def __init__(self, serverUrl, sessionId, sLeads):
+        AuthenticatedRequest.__init__(self, serverUrl, sessionId, "convertLead")
+        self.__sLeads = sLeads
+
+    def writeBody(self, s):
+        s.writeElement(_partnerNs, "leadConverts", self.__sLeads)
 
 
 class ResetPasswordRequest(AuthenticatedRequest):
