@@ -201,6 +201,28 @@ class Client(BaseClient):
                 d['errors'] = list()
         return data
 
+    def convert_leads(self, lead_converts):
+        preparedLeadConverts = _prepareSObjects(lead_converts)
+        del preparedLeadConverts['fieldsToNull']
+        res = BaseClient.convertLeads(self, preparedLeadConverts)
+        if type(res) not in (TupleType, ListType):
+            res = [res]
+        data = list()
+        for resu in res:
+            d = dict()
+            data.append(d)
+            d['success'] = success = _bool(resu[_tPartnerNS.success])
+            if not success:
+                d['errors'] = [_extractError(e)
+                               for e in resu[_tPartnerNS.errors:]]
+            else:
+                d['errors'] = list()
+                d['account_id'] = str(resu[_tPartnerNS.accountId])
+                d['contact_id'] = str(resu[_tPartnerNS.contactId])
+                d['lead_id'] = str(resu[_tPartnerNS.leadId])
+                d['opportunity_id'] = str(resu[_tPartnerNS.opportunityId])
+        return data
+
     def retrieve(self, fields, sObjectType, ids):
         resultSet = BaseClient.retrieve(self, fields, sObjectType, ids)
         type_data = self.describeSObjects(sObjectType)[0]
@@ -424,37 +446,37 @@ class Field(object):
     def marshall(self, xml):
         return marshall(self.type, self.name, xml)
 
+def _doPrep(field_dict):
+    """
+    _doPrep is makes changes in-place.
+    Do some prep work converting python types into formats that
+    Salesforce will accept.
+    This includes converting lists of strings to "apple;orange;pear".
+    Dicts will be converted to embedded objects
+    None or empty list values will be Null-ed
+    """
+    fieldsToNull = []
+    for k,v in field_dict.items():
+        if v is None:
+            fieldsToNull.append(k)
+            field_dict[k] = []
+        if hasattr(v,'__iter__'):
+            if len(v) == 0:
+                fieldsToNull.append(k)
+            elif isinstance(v, dict):
+                innerCopy = copy.deepcopy(v)
+                _doPrep(innerCopy)
+                field_dict[k] = innerCopy
+            else:
+                field_dict[k] = ";".join(v)
+    if 'fieldsToNull' in field_dict:
+        raise ValueError, "fieldsToNull should be populated by the client, not the caller."
+    field_dict['fieldsToNull'] = fieldsToNull
 
 # sObjects can be 1 or a list. If values are python lists or tuples, we
 # convert these to strings:
 # ['one','two','three'] becomes 'one;two;three'
 def _prepareSObjects(sObjects):
-     def _doPrep(field_dict):
-         """
-         _doPrep is makes changes in-place.
-         Do some prep work converting python types into formats that
-         Salesforce will accept.
-         This includes converting lists of strings to "apple;orange;pear".
-         Dicts will be converted to embedded objects
-         None or empty list values will be Null-ed
-         """
-         fieldsToNull = []
-         for k,v in field_dict.items():
-             if v is None:
-                 fieldsToNull.append(k)
-                 field_dict[k] = []
-             if hasattr(v,'__iter__'):
-                 if len(v) == 0:
-                     fieldsToNull.append(k)
-                 elif isinstance(v, dict):
-                     innerCopy = copy.deepcopy(v)
-                     _doPrep(innerCopy)
-                     field_dict[k] = innerCopy
-                 else:
-                     field_dict[k] = ";".join(v)
-         if 'fieldsToNull' in field_dict:
-             raise ValueError, "fieldsToNull should be populated by the client, not the caller."
-         field_dict['fieldsToNull'] = fieldsToNull
 
      sObjectsCopy = copy.deepcopy(sObjects)
      if isinstance(sObjectsCopy,dict):

@@ -1,6 +1,9 @@
 Changelog
 =========
 
+1.4 (2014-08-14)
+ Introduce convertLead functionality.
+
 1.3 (2013-11-7)
  Bugfix introduced in 1.2
  
