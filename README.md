@@ -95,7 +95,7 @@ Batches work automatically (though sfdc limits the number to 200 maximum):
     ]
     res = svc.create(contacts)
 
-Send a new email, optionally using Templates, including attachments and creating activities for associated objects:
+Send a new email, optionally using templates, including attachments and creating activities for associated objects:
         
     simple_email = {
         'subject': 'Test of Salesforce sendEmail()',
