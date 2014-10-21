@@ -36,7 +36,6 @@ this time:
  * queryAll
  * undelete
  * describeSObject
- * sendEmail
  * describeDataCategoryGroups
  * describeDataCategoryGroupStructures
 
@@ -95,6 +94,36 @@ Batches work automatically (though sfdc limits the number to 200 maximum):
         }
     ]
     res = svc.create(contacts)
+
+Send a new email, optionally using Templates, including attachments and creating activities for associated objects:
+        
+    simple_email = {
+        'subject': 'Test of Salesforce sendEmail()',
+        'plainTextBody': "This is a simple test message.",
+        'toAddresses': str(loginResult.userInfo.userEmail),   # Send email to logged-in user.
+    }
+    res = svc.sendEmail( [simple_email] )
+    res
+    [{'errors': [], 'success': True}]
+    
+    complex_email = {
+        'templateId': '00X80000002h4TV',    # Id of an EmailTemplate used for Subject and Body, supports field merge from whatId.
+        'targetObjectId':'003808980000GJ',  # Id of a Contact, Lead or User which the email will be sent to.
+        'whatId':'500800000RuJo',           # Id of a SObject to create an Activity in.
+        'saveAsActivity': True,
+        'useSignature': True,
+        'inReplyTo': '<1234567890123456789%example@example.com>',  # A previous email thread
+        'references': '<1234567890123456789%example@example.com>',
+        'fileAttachments': [{
+            'body': base64_encoded_png,
+            'contentType':'image/png',
+            'fileName':'salesforce_logo.png',
+            'inline':True
+        }]
+    }
+    res = svc.sendEmail( [complex_email] )
+    res
+    [{'errors': [], 'success': True}]
 
 More Examples
 =============
