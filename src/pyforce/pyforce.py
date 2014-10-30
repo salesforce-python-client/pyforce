@@ -1,5 +1,5 @@
 import logging
-from xmlclient import _tPartnerNS, _tSObjectNS
+from xmlclient import _tPartnerNS, _tSObjectNS, _tSchemaInstanceNS
 from xmlclient import Client as BaseClient
 from marshall import marshall
 from types import TupleType, ListType
@@ -7,7 +7,6 @@ import re
 import copy
 from xmltramp import Namespace
 
-_tSchemaInstanceNS = Namespace('http://www.w3.org/2001/XMLSchema-instance')
 _tSchemaNS = Namespace('http://www.w3.org/2001/XMLSchema')
 
 DEFAULT_FIELD_TYPE = "string"
@@ -221,6 +220,40 @@ class Client(BaseClient):
                 d['contact_id'] = str(resu[_tPartnerNS.contactId])
                 d['lead_id'] = str(resu[_tPartnerNS.leadId])
                 d['opportunity_id'] = str(resu[_tPartnerNS.opportunityId])
+        return data
+
+    def sendEmail(self, emails, mass_type='SingleEmailMessage'):
+        """
+        Send one or more emails from Salesforce.
+        
+        Parameters:
+            emails - a dictionary or list of dictionaries, each representing a single email as described by https://www.salesforce.com/us/developer/docs/api/Content/sforce_api_calls_sendemail.htm
+            massType - 'SingleEmailMessage' or 'MassEmailMessage'. MassEmailMessage is used for mailmerge of up to 250 recepients in a single pass.
+        
+        Note:
+            Newly created Salesforce Sandboxes default to System email only. In this situation, sendEmail() will fail with NO_MASS_MAIL_PERMISSION.
+        """
+        preparedEmails = _prepareSObjects(emails)
+        if isinstance(preparedEmails,dict):
+            # If root element is a dict, then this is a single object not an array
+            del preparedEmails['fieldsToNull']
+        else:
+            # else this is an array, and each elelment should be prepped.
+            for listitems in preparedEmails:
+                del listitems['fieldsToNull']
+        res = BaseClient.sendEmail(self, preparedEmails, mass_type)
+        if type(res) not in (TupleType, ListType):
+            res = [res]
+        data = list()
+        for resu in res:
+            d = dict()
+            data.append(d)
+            d['success'] = success = _bool(resu[_tPartnerNS.success])
+            if not success:
+                d['errors'] = [_extractError(e)
+                               for e in resu[_tPartnerNS.errors:]]
+            else:
+                d['errors'] = list()
         return data
 
     def retrieve(self, fields, sObjectType, ids):

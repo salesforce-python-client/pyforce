@@ -19,6 +19,7 @@ from xml.sax.xmlreader import AttributesNSImpl
 _partnerNs = "urn:partner.soap.sforce.com"
 _sobjectNs = "urn:sobject.partner.soap.sforce.com"
 _envNs = "http://schemas.xmlsoap.org/soap/envelope/"
+_schemaInstanceNs = "http://www.w3.org/2001/XMLSchema-instance"
 _noAttrs = AttributesNSImpl({}, {})
 
 DEFAULT_SERVER_URL = 'https://login.salesforce.com/services/Soap/u/20.0'
@@ -27,6 +28,7 @@ DEFAULT_SERVER_URL = 'https://login.salesforce.com/services/Soap/u/20.0'
 _tPartnerNS = xmltramp.Namespace(_partnerNs)
 _tSObjectNS = xmltramp.Namespace(_sobjectNs)
 _tSoapNS = xmltramp.Namespace(_envNs)
+_tSchemaInstanceNS = xmltramp.Namespace(_schemaInstanceNs)
 
 # global config
 gzipRequest=True    # are we going to gzip the request ?
@@ -127,6 +129,19 @@ class Client:
 
     def convertLeads(self, convertLeads):
         return ConvertLeadsRequest(self.__serverUrl, self.sessionId, convertLeads).post(self.__conn)
+
+    def sendEmail(self, emails, massType='SingleEmailMessage'):
+        """
+        Send one or more emails from Salesforce.
+        
+        Parameters:
+            emails - a dictionary or list of dictionaries, each representing a single email as described by https://www.salesforce.com/us/developer/docs/api/Content/sforce_api_calls_sendemail.htm
+            massType - 'SingleEmailMessage' or 'MassEmailMessage'. MassEmailMessage is used for mailmerge of up to 250 recepients in a single pass.
+        
+        Note:
+            Newly created Salesforce Sandboxes default to System email only. In this situation, sendEmail() will fail with NO_MASS_MAIL_PERMISSION.
+        """
+        return SendEmailRequest(self.__serverUrl, self.sessionId, emails, massType).post(self.__conn)
 
 # fixed version of XmlGenerator, handles unqualified attributes correctly
 class BeatBoxXmlGenerator(XMLGenerator):
@@ -253,10 +268,12 @@ class SoapWriter(XmlWriter):
         self.startPrefixMapping("s", _envNs)
         self.startPrefixMapping("p", _partnerNs)
         self.startPrefixMapping("o", _sobjectNs)
+        self.startPrefixMapping("x", _schemaInstanceNs)
         self.startElement(_envNs, "Envelope")
 
     def endDocument(self):
         self.endElement()  # envelope
+        self.endPrefixMapping("x")
         self.endPrefixMapping("o")
         self.endPrefixMapping("p")
         self.endPrefixMapping("s")
@@ -501,6 +518,14 @@ class ConvertLeadsRequest(AuthenticatedRequest):
     def writeBody(self, s):
         s.writeElement(_partnerNs, "leadConverts", self.__sLeads)
 
+class SendEmailRequest(AuthenticatedRequest):
+    def __init__(self, serverUrl, sessionId, emails, massType="SingleEmailMessage"):
+        AuthenticatedRequest.__init__(self, serverUrl, sessionId, "sendEmail")
+        self.__emails = emails
+        self.__massType = massType
+
+    def writeBody(self, s):
+        s.writeElement(_partnerNs, "messages", self.__emails, attrs={(_schemaInstanceNs, 'type'):'p:'+self.__massType})
 
 class ResetPasswordRequest(AuthenticatedRequest):
     def __init__(self, serverUrl, sessionId, userId):
