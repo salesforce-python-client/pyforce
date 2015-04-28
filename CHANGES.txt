@@ -1,6 +1,12 @@
 Changelog
 =========
 
+1.6 (2105-04-27)
+ Introduce logout functionality. New maintainer.
+
+1.5 (2014-10-30)
+ Introduce sendEmail functionality.
+
 1.4 (2014-08-14)
  Introduce convertLead functionality.
 
