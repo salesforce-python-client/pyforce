@@ -27,10 +27,8 @@ Compatibility
 Services API. However, the following API calls have not been implemented at
 this time:
 
- * convertLead
  * emptyRecycleBin
  * invalidateSessions
- * logout
  * merge
  * process
  * queryAll
