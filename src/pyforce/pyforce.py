@@ -82,6 +82,10 @@ class Client(BaseClient):
         data['userInfo'] = _extractUserInfo(res[_tPartnerNS.userInfo])
         return data
 
+    def logout(self):
+        res = BaseClient.logout(self)
+        return res._name == _tPartnerNS.logoutResponse
+        
     def isConnected(self):
         """ First pass at a method to check if we're connected or not """
         if self.__conn and self.__conn._HTTPConnection__state == 'Idle':

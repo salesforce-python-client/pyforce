@@ -67,6 +67,9 @@ class Client:
         (scheme, host, path, params, query, frag) = urlparse(self.__serverUrl)
         self.__conn = makeConnection(scheme, host)
 
+    def logout(self):
+        return LogoutRequest(self.__serverUrl, self.sessionId).post(self.__conn)
+
     # set the batchSize property on the Client instance to change the batchsize for query/queryMore
     def query(self, soql):
         return QueryRequest(self.__serverUrl, self.sessionId, self.batchSize, soql).post(self.__conn)
@@ -366,8 +369,10 @@ class SoapEnvelope:
         # it contains either a single child, or for a batch call multiple children
         if alwaysReturnList or len(result) > 1:
             return result[:]
-        else:
+        elif len(result) == 1:
             return result[0]
+        else:
+            return result
 
 
 class LoginRequest(SoapEnvelope):
@@ -404,6 +409,11 @@ class AuthenticatedRequest(SoapEnvelope):
                 if (fn != 'type'):
                     s.writeElement(_sobjectNs, fn, sObjects[fn])
             s.endElement()
+
+
+class LogoutRequest(AuthenticatedRequest):
+    def __init__(self, serverUrl, sessionId, operationName='logout'):
+        AuthenticatedRequest.__init__(self, serverUrl, sessionId, 'logout')
 
 
 class QueryOptionsRequest(AuthenticatedRequest):

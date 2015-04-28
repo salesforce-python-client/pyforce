@@ -138,7 +138,16 @@ class TestBeatbox(unittest.TestCase):
         }
         res = svc.sendEmail( [testemail] )
         self.assertEqual(str(res[partnerns.success]), 'true')
-    
+
+    def testLogout(self):
+        """Logout and verify that the previous sessionId longer works."""
+        self.assertIn('userId', self.svc.getUserInfo())
+        response = self.svc.logout()
+        self.assertEqual(response._name, pyforce._tPartnerNS.logoutResponse, "Response {} was not {}".format(response._name, pyforce._tPartnerNS.logoutResponse))
+        with self.assertRaises(SessionTimeoutError) as cm:
+            self.svc.getUserInfo()
+        self.assertEqual(cm.exception.faultCode, 'INVALID_SESSION_ID', "Session didn't fail with INVALID_SESSION_ID.")
+
 def test_suite():
     return unittest.TestSuite((
         unittest.makeSuite(TestBeatbox),
