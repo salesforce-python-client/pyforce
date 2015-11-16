@@ -14,6 +14,7 @@ querytyperegx = re.compile('(?:from|FROM) (\S+)')
 
 _logger = logging.getLogger("pyforce.{0}".format(__name__))
 
+
 class QueryRecord(dict):
 
     def __getattr__(self, n):
@@ -24,6 +25,7 @@ class QueryRecord(dict):
 
     def __setattr__(self, n, v):
         self[n] = v
+
 
 class QueryRecordSet(list):
 
@@ -40,13 +42,15 @@ class QueryRecordSet(list):
         return self
 
     def __getitem__(self, n):
-        if type(n) == type(''):
+        if type(n) == type(''):  # This should be a isinstance statement
+                                 # Not sure if should be None or str
             try:
                 return getattr(self, n)
             except AttributeError, n:
                 raise KeyError
         else:
             return list.__getitem__(self, n)
+
 
 class SObject(object):
 
@@ -55,7 +59,7 @@ class SObject(object):
             setattr(self, k, v)
 
     def marshall(self, fieldname, xml):
-        if self.fields.has_key(fieldname):
+        if fieldname in self.fields.keys():
             field = self.fields[fieldname]
         else:
             return marshall(DEFAULT_FIELD_TYPE, fieldname, xml)
@@ -85,7 +89,7 @@ class Client(BaseClient):
     def logout(self):
         res = BaseClient.logout(self)
         return res._name == _tPartnerNS.logoutResponse
-        
+
     def isConnected(self):
         """ First pass at a method to check if we're connected or not """
         if self.__conn and self.__conn._HTTPConnection__state == 'Idle':
@@ -108,7 +112,9 @@ class Client(BaseClient):
             except KeyError:
                 pass
             d['deletable'] = _bool(r[_tPartnerNS.deletable])
-            d['deprecatedAndHidden'] = _bool(r[_tPartnerNS.deprecatedAndHidden])
+            d['deprecatedAndHidden'] = _bool(
+                r[_tPartnerNS.deprecatedAndHidden]
+            )
             try:
                 d['feedEnabled'] = _bool(r[_tPartnerNS.feedEnabled])
             except KeyError:
@@ -152,7 +158,9 @@ class Client(BaseClient):
             except KeyError:
                 pass
             d['deletable'] = _bool(r[_tPartnerNS.deletable])
-            d['deprecatedAndHidden'] = _bool(r[_tPartnerNS.deprecatedAndHidden])
+            d['deprecatedAndHidden'] = _bool(
+                r[_tPartnerNS.deprecatedAndHidden]
+            )
             try:
                 d['feedEnabled'] = _bool(r[_tPartnerNS.feedEnabled])
             except KeyError:
@@ -170,7 +178,8 @@ class Client(BaseClient):
             d['mergeable'] = _bool(r[_tPartnerNS.mergeable])
             d['name'] = str(r[_tPartnerNS.name])
             d['queryable'] = _bool(r[_tPartnerNS.queryable])
-            d['recordTypeInfos'] = [_extractRecordTypeInfo(rti) for rti in r[_tPartnerNS.recordTypeInfos:]]
+            d['recordTypeInfos'] = ([_extractRecordTypeInfo(rti) for rti in
+                                    r[_tPartnerNS.recordTypeInfos:]])
             d['replicateable'] = _bool(r[_tPartnerNS.replicateable])
             d['retrieveable'] = _bool(r[_tPartnerNS.retrieveable])
             d['searchable'] = _bool(r[_tPartnerNS.searchable])
@@ -229,17 +238,25 @@ class Client(BaseClient):
     def sendEmail(self, emails, mass_type='SingleEmailMessage'):
         """
         Send one or more emails from Salesforce.
-        
+
         Parameters:
-            emails - a dictionary or list of dictionaries, each representing a single email as described by https://www.salesforce.com/us/developer/docs/api/Content/sforce_api_calls_sendemail.htm
-            massType - 'SingleEmailMessage' or 'MassEmailMessage'. MassEmailMessage is used for mailmerge of up to 250 recepients in a single pass.
-        
+            emails - a dictionary or list of dictionaries, each representing
+                     a single email as described by https://www.salesforce.com
+                     /us/developer/docs/api/Content/sforce_api_calls_sendemail
+                     .htm
+            massType - 'SingleEmailMessage' or 'MassEmailMessage'.
+                       MassEmailMessage is used for mailmerge of up to 250
+                       recepients in a single pass.
+
         Note:
-            Newly created Salesforce Sandboxes default to System email only. In this situation, sendEmail() will fail with NO_MASS_MAIL_PERMISSION.
+            Newly created Salesforce Sandboxes default to System email only.
+            In this situation, sendEmail() will fail with
+            NO_MASS_MAIL_PERMISSION.
         """
         preparedEmails = _prepareSObjects(emails)
-        if isinstance(preparedEmails,dict):
-            # If root element is a dict, then this is a single object not an array
+        if isinstance(preparedEmails, dict):
+            # If root element is a dict, then this is a single object not an
+            # array
             del preparedEmails['fieldsToNull']
         else:
             # else this is an array, and each elelment should be prepped.
@@ -307,7 +324,7 @@ class Client(BaseClient):
             types_descs = self.describeSObjects(types)
         else:
             types_descs = []
-        return dict(map(lambda t, d:(t, d), types, types_descs))
+        return dict(map(lambda t, d: (t, d), types, types_descs))
 
     def _extractRecord(self, r, typeDescs):
         record = QueryRecord()
@@ -317,16 +334,20 @@ class Client(BaseClient):
             type_data = typeDescs[row_type]
             _logger.debug("type data: {0}".format(type_data))
             for field in r:
-               fname = str(field._name[1]) 
-               if isObject(field):
-                   record[fname] = self._extractRecord(r[field._name:][0], typeDescs)
-               elif isQueryResult(field):
-                   record[fname] = QueryRecordSet(records=[self._extractRecord(rec, typeDescs) for rec in field[_tPartnerNS.records:]],
-                                                  done=field[_tPartnerNS.done],
-                                                  size=int(str(field[_tPartnerNS.size]))
-                                                 )
-               else:
-                   record[fname] = type_data.marshall(fname, r)
+                fname = str(field._name[1])
+                if isObject(field):
+                    record[fname] = self._extractRecord(
+                        r[field._name:][0], typeDescs
+                    )
+                elif isQueryResult(field):
+                    record[fname] = QueryRecordSet(
+                        records=[self._extractRecord(rec, typeDescs) for rec
+                                 in field[_tPartnerNS.records:]],
+                        done=field[_tPartnerNS.done],
+                        size=int(str(field[_tPartnerNS.size]))
+                    )
+                else:
+                    record[fname] = type_data.marshall(fname, r)
         return record
 
     def query(self, *args, **kw):
@@ -335,28 +356,38 @@ class Client(BaseClient):
         else:
             typeDescs = {}
 
-        if len(args) == 1: # full query string
+        if len(args) == 1:  # full query string
             queryString = args[0]
-        elif len(args) == 2: # BBB: fields, sObjectType
+        elif len(args) == 2:  # BBB: fields, sObjectType
             queryString = 'select %s from %s' % (args[0], args[1])
-            if 'conditionalExpression' in kw: # BBB: fields, sObjectType, conditionExpression as kwarg
+            if 'conditionalExpression' in kw:  # BBB: fields, sObjectType,
+                                               # conditionExpression as kwarg
                 queryString += ' where %s' % (kw['conditionalExpression'])
-        elif len(args) == 3: # BBB: fields, sObjectType, conditionExpression as positional arg
+        elif len(args) == 3:  # BBB: fields, sObjectType, conditionExpression
+                              # as positional arg
             whereClause = args[2] and (' where %s' % args[2]) or ''
-            queryString = 'select %s from %s%s' % (args[0], args[1], whereClause)
+            queryString = 'select %s from %s%s' % (
+                args[0],
+                args[1],
+                whereClause
+            )
         else:
             raise RuntimeError, "Wrong number of arguments to query method."
 
         res = BaseClient.query(self, queryString)
         # calculate the union of the sets of record types from each record
-        types = reduce(lambda a,b: a|b, [getRecordTypes(r) for r in res[_tPartnerNS.records:]], set())
+        types = reduce(lambda a, b: a | b, [getRecordTypes(r) for r in
+                                        res[_tPartnerNS.records:]], set())
         new_types = types - set(typeDescs.keys())
         if new_types:
             typeDescs.update(self.queryTypesDescriptions(new_types))
-        data = QueryRecordSet(records=[self._extractRecord(r, typeDescs) for r in res[_tPartnerNS.records:]],
-                              done=_bool(res[_tPartnerNS.done]),
-                              size=int(str(res[_tPartnerNS.size])),
-                              queryLocator = str(res[_tPartnerNS.queryLocator]))
+        data = QueryRecordSet(
+            records=[self._extractRecord(r, typeDescs) for r in
+                     res[_tPartnerNS.records:]],
+            done=_bool(res[_tPartnerNS.done]),
+            size=int(str(res[_tPartnerNS.size])),
+            queryLocator=str(res[_tPartnerNS.queryLocator])
+        )
         return data
 
     def queryMore(self, queryLocator):
@@ -368,14 +399,18 @@ class Client(BaseClient):
         locator = queryLocator
         res = BaseClient.queryMore(self, locator)
         # calculate the union of the sets of record types from each record
-        types = reduce(lambda a,b: a|b, [getRecordTypes(r) for r in res[_tPartnerNS.records:]], set())
+        types = reduce(lambda a, b: a | b, [getRecordTypes(r) for r in
+                       res[_tPartnerNS.records:]], set())
         new_types = types - set(typeDescs.keys())
         if new_types:
             typeDescs.update(self.queryTypesDescriptions(new_types))
-        data = QueryRecordSet(records=[self._extractRecord(r, typeDescs) for r in res[_tPartnerNS.records:]],
-                              done=_bool(res[_tPartnerNS.done]),
-                              size=int(str(res[_tPartnerNS.size])),
-                              queryLocator = str(res[_tPartnerNS.queryLocator]))
+        data = QueryRecordSet(
+            records=[self._extractRecord(r, typeDescs) for r in
+                     res[_tPartnerNS.records:]],
+            done=_bool(res[_tPartnerNS.done]),
+            size=int(str(res[_tPartnerNS.size])),
+            queryLocator=str(res[_tPartnerNS.queryLocator])
+        )
         return data
 
     def search(self, sosl):
@@ -387,11 +422,13 @@ class Client(BaseClient):
 
         # calculate the union of the sets of record types from each record
         if len(res):
-            types = reduce(lambda a,b: a|b, [getRecordTypes(r) for r in res[_tPartnerNS.searchRecords]], set())
+            types = reduce(lambda a, b: a | b, [getRecordTypes(r) for r in
+                           res[_tPartnerNS.searchRecords]], set())
             new_types = types - set(typeDescs.keys())
             if new_types:
                 typeDescs.update(self.queryTypesDescriptions(new_types))
-            return [self._extractRecord(r, typeDescs) for r in res[_tPartnerNS.searchRecords]]
+            return [self._extractRecord(r, typeDescs) for r in
+                    res[_tPartnerNS.searchRecords]]
         else:
             return []
 
@@ -439,9 +476,12 @@ class Client(BaseClient):
         data = list()
         for r in res:
             d = dict(
-                id = str(r[_tPartnerNS.id]),
-                deletedDate = marshall('datetime', 'deletedDate', r,
-                ns=_tPartnerNS))
+                id=str(r[_tPartnerNS.id]),
+                deletedDate=marshall(
+                    'datetime', 'deletedDate', r,
+                    ns=_tPartnerNS
+                )
+            )
             data.append(d)
         return data
 
@@ -463,10 +503,11 @@ class Client(BaseClient):
         for r in res:
             tabs = [_extractTab(t) for t in r[_tPartnerNS.tabs:]]
             d = dict(
-                    label = str(r[_tPartnerNS.label]),
-                    logoUrl = str(r[_tPartnerNS.logoUrl]),
-                    selected = _bool(r[_tPartnerNS.selected]),
-                    tabs=tabs)
+                label=str(r[_tPartnerNS.label]),
+                logoUrl=str(r[_tPartnerNS.logoUrl]),
+                selected=_bool(r[_tPartnerNS.selected]),
+                tabs=tabs
+            )
             data.append(d)
         return data
 
@@ -477,11 +518,12 @@ class Client(BaseClient):
 class Field(object):
 
     def __init__(self, **kw):
-        for k,v in kw.items():
-            setattr(self, k, v)
+        for key, value in kw.items():
+            setattr(self, key, value)
 
     def marshall(self, xml):
         return marshall(self.type, self.name, xml)
+
 
 def _doPrep(field_dict):
     """
@@ -493,40 +535,45 @@ def _doPrep(field_dict):
     None or empty list values will be Null-ed
     """
     fieldsToNull = []
-    for k,v in field_dict.items():
-        if v is None:
-            fieldsToNull.append(k)
-            field_dict[k] = []
-        if hasattr(v,'__iter__'):
-            if len(v) == 0:
-                fieldsToNull.append(k)
-            elif isinstance(v, dict):
-                innerCopy = copy.deepcopy(v)
+    for key, value in field_dict.items():
+        if value is None:
+            fieldsToNull.append(key)
+            field_dict[key] = []
+        if hasattr(value, '__iter__'):
+            if len(value) == 0:
+                fieldsToNull.append(key)
+            elif isinstance(value, dict):
+                innerCopy = copy.deepcopy(value)
                 _doPrep(innerCopy)
-                field_dict[k] = innerCopy
+                field_dict[key] = innerCopy
             else:
-                field_dict[k] = ";".join(v)
+                field_dict[key] = ";".join(value)
     if 'fieldsToNull' in field_dict:
-        raise ValueError, "fieldsToNull should be populated by the client, not the caller."
+        raise ValueError, \
+            "fieldsToNull should be populated by the client, not the caller."
     field_dict['fieldsToNull'] = fieldsToNull
 
 # sObjects can be 1 or a list. If values are python lists or tuples, we
 # convert these to strings:
 # ['one','two','three'] becomes 'one;two;three'
-def _prepareSObjects(sObjects):
 
-     sObjectsCopy = copy.deepcopy(sObjects)
-     if isinstance(sObjectsCopy,dict):
+
+def _prepareSObjects(sObjects):
+    '''Prepare a SObject'''
+    sObjectsCopy = copy.deepcopy(sObjects)
+    if isinstance(sObjectsCopy, dict):
         # If root element is a dict, then this is a single object not an array
-         _doPrep(sObjectsCopy)
-     else:
-         # else this is an array, and each elelment should be prepped.
-         for listitems in sObjectsCopy:
-             _doPrep(listitems)
-     return sObjectsCopy
+        _doPrep(sObjectsCopy)
+    else:
+        # else this is an array, and each elelment should be prepped.
+        for listitems in sObjectsCopy:
+            _doPrep(listitems)
+    return sObjectsCopy
+
 
 def _bool(val):
     return str(val) == 'true'
+
 
 def _extractFieldInfo(fdata):
     data = dict()
@@ -543,7 +590,7 @@ def _extractFieldInfo(fdata):
         data['htmlFormatted'] = _bool(fdata[_tPartnerNS.htmlFormatted])
     except KeyError:
         data['htmlFormatted'] = False
-    data['label']  = str(fdata[_tPartnerNS.label])
+    data['label'] = str(fdata[_tPartnerNS.label])
     data['length'] = int(str(fdata[_tPartnerNS.length]))
     data['name'] = str(fdata[_tPartnerNS.name])
     data['nameField'] = _bool(fdata[_tPartnerNS.nameField])
@@ -582,13 +629,17 @@ def _extractChildRelInfo(crdata):
     data['field'] = str(crdata[_tPartnerNS.field])
     return data
 
+
 def _extractRecordTypeInfo(rtidata):
     data = dict()
     data['available'] = _bool(rtidata[_tPartnerNS.available])
-    data['defaultRecordTypeMapping'] = _bool(rtidata[_tPartnerNS.defaultRecordTypeMapping])
+    data['defaultRecordTypeMapping'] = _bool(
+        rtidata[_tPartnerNS.defaultRecordTypeMapping]
+    )
     data['name'] = str(rtidata[_tPartnerNS.name])
     data['recordTypeId'] = str(rtidata[_tPartnerNS.recordTypeId])
     return data
+
 
 def _extractError(edata):
     data = dict()
@@ -597,32 +648,37 @@ def _extractError(edata):
     data['fields'] = [str(f) for f in edata[_tPartnerNS.fields:]]
     return data
 
+
 def _extractTab(tdata):
     data = dict(
-            custom = _bool(tdata[_tPartnerNS.custom]),
-            label = str(tdata[_tPartnerNS.label]),
-            sObjectName = str(tdata[_tPartnerNS.sobjectName]),
-            url = str(tdata[_tPartnerNS.url]))
+        custom=_bool(tdata[_tPartnerNS.custom]),
+        label=str(tdata[_tPartnerNS.label]),
+        sObjectName=str(tdata[_tPartnerNS.sobjectName]),
+        url=str(tdata[_tPartnerNS.url]))
     return data
+
 
 def _extractUserInfo(res):
     data = dict(
-            accessibilityMode = _bool(res[_tPartnerNS.accessibilityMode]),
-            currencySymbol = str(res[_tPartnerNS.currencySymbol]),
-            organizationId = str(res[_tPartnerNS.organizationId]),
-            organizationMultiCurrency = _bool(
-                    res[_tPartnerNS.organizationMultiCurrency]),
-            organizationName = str(res[_tPartnerNS.organizationName]),
-            userDefaultCurrencyIsoCode = str(
-                    res[_tPartnerNS.userDefaultCurrencyIsoCode]),
-            userEmail = str(res[_tPartnerNS.userEmail]),
-            userFullName = str(res[_tPartnerNS.userFullName]),
-            userId = str(res[_tPartnerNS.userId]),
-            userLanguage = str(res[_tPartnerNS.userLanguage]),
-            userLocale = str(res[_tPartnerNS.userLocale]),
-            userTimeZone = str(res[_tPartnerNS.userTimeZone]),
-            userUiSkin = str(res[_tPartnerNS.userUiSkin]))
+        accessibilityMode=_bool(res[_tPartnerNS.accessibilityMode]),
+        currencySymbol=str(res[_tPartnerNS.currencySymbol]),
+        organizationId=str(res[_tPartnerNS.organizationId]),
+        organizationMultiCurrency=_bool(
+            res[_tPartnerNS.organizationMultiCurrency]
+        ),
+        organizationName=str(res[_tPartnerNS.organizationName]),
+        userDefaultCurrencyIsoCode=str(
+            res[_tPartnerNS.userDefaultCurrencyIsoCode]
+        ),
+        userEmail=str(res[_tPartnerNS.userEmail]),
+        userFullName=str(res[_tPartnerNS.userFullName]),
+        userId=str(res[_tPartnerNS.userId]),
+        userLanguage=str(res[_tPartnerNS.userLanguage]),
+        userLocale=str(res[_tPartnerNS.userLocale]),
+        userTimeZone=str(res[_tPartnerNS.userTimeZone]),
+        userUiSkin=str(res[_tPartnerNS.userUiSkin]))
     return data
+
 
 def isObject(xml):
     try:
@@ -633,6 +689,7 @@ def isObject(xml):
     except KeyError:
         return False
 
+
 def isQueryResult(xml):
     try:
         if xml(_tSchemaInstanceNS.type) == 'QueryResult':
@@ -641,6 +698,7 @@ def isQueryResult(xml):
             return False
     except KeyError:
         return False
+
 
 def isnil(xml):
     try:
@@ -651,13 +709,16 @@ def isnil(xml):
     except KeyError:
         return False
 
+
 def getRecordTypes(xml):
-    record_types = set() 
+    record_types = set()
     if xml:
         record_types.add(str(xml[_tSObjectNS.type]))
         for field in xml:
             if isObject(field):
                 record_types.update(getRecordTypes(field))
             elif isQueryResult(field):
-                record_types.update(reduce(lambda x, y: x|y, [getRecordTypes(r) for r in field[_tPartnerNS.records:]]))
+                record_types.update(reduce(lambda x, y: x | y, [
+                                    getRecordTypes(r) for r in
+                                    field[_tPartnerNS.records:]]))
     return record_types
