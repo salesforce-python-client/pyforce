@@ -1,7 +1,7 @@
 import logging
 from xmlclient import _tPartnerNS, _tSObjectNS, _tSoapNS
 import pyforce
-from types import ListType, TupleType
+from types import ListType, TupleType, DictType
 import datetime
 import re
 
@@ -14,16 +14,16 @@ datetimeregx = re.compile(
 
 doubleregx = re.compile(r'^(\d)+(\.\d+)?$')
 
-stringtypes = (
-    'string', 'id', 'phone', 'url', 'email', 'anyType', 'picklist',
-    'reference', 'encryptedstring', 'address'
-)
+stringtypes = ('string', 'id', 'phone', 'url', 'email',
+                'anyType', 'picklist', 'reference', 'encryptedstring')
 
 texttypes = ('textarea')
 
 doubletypes = ('double', 'currency', 'percent')
 
 multitypes = ('combobox', 'multipicklist')
+
+dicttypes = ('address')
 
 _marshallers = dict()
 
@@ -34,7 +34,7 @@ def marshall(fieldtype, fieldname, xml, ns=_tSObjectNS):
 
 
 def register(fieldtypes, func):
-    if type(fieldtypes) not in (ListType, TupleType):
+    if type(fieldtypes) not in (ListType, TupleType, DictType):
         fieldtypes = [fieldtypes]
     for t in fieldtypes:
         _marshallers[t] = func
@@ -136,3 +136,12 @@ def base64Marshaller(fieldname, xml, ns):
 
 
 register('base64', base64Marshaller)
+
+
+def dictMarshaller(fieldname, xml, ns):
+    mydict = {}
+    for x in xml[getattr(ns,fieldname)]:
+        mydict[x._name[1]] = x.__str__()
+    return mydict
+
+register(dicttypes, dictMarshaller)
