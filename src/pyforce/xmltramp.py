@@ -35,8 +35,7 @@ def quote(x, elt=True):
         x = x.replace('"', '&quot;')
     return x
 
-
-class Element:
+class Element(object):
     def __init__(self, name, attrs=None, children=None, prefixes=None):
         if islst(name) and name[0] is None:
             name = name[1]
@@ -259,7 +258,7 @@ class Element:
         return len(self._dir)
 
 
-class Namespace:
+class Namespace(object):
     def __init__(self, uri):
         self.__uri = uri
 
