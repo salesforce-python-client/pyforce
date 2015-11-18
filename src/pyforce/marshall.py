@@ -4,7 +4,6 @@ import pyforce
 from types import ListType, TupleType, DictType
 import datetime
 import re
-import datetime, re
 
 _logger = logging.getLogger("pyforce.{0}".format(__name__))
 
@@ -16,7 +15,7 @@ datetimeregx = re.compile(
 doubleregx = re.compile(r'^(\d)+(\.\d+)?$')
 
 stringtypes = ('string', 'id', 'phone', 'url', 'email',
-                'anyType', 'picklist', 'reference', 'encryptedstring')
+               'anyType', 'picklist', 'reference', 'encryptedstring')
 
 texttypes = ('textarea')
 
@@ -141,8 +140,8 @@ register('base64', base64Marshaller)
 
 def dictMarshaller(fieldname, xml, ns):
     mydict = {}
-    for x in xml[getattr(ns,fieldname)]:
-        mydict[x._name[1]] = x.__str__()
+    for key in xml[getattr(ns, fieldname)]:
+        mydict[key._name[1]] = key.__str__()
     return mydict
 
 register(dicttypes, dictMarshaller)

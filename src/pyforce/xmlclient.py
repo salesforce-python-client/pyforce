@@ -349,7 +349,7 @@ class XmlWriter(object):
 
     def endDocument(self):
         self.xg.endDocument()
-        if (self.__gzip not None):
+        if (self.__gzip != None):
             self.__gzip.close()
         return self.__buf.getvalue()
 

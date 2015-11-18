@@ -35,6 +35,7 @@ def quote(x, elt=True):
         x = x.replace('"', '&quot;')
     return x
 
+
 class Element(object):
     def __init__(self, name, attrs=None, children=None, prefixes=None):
         if islst(name) and name[0] is None:

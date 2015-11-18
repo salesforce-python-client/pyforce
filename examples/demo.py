@@ -8,7 +8,7 @@ import datetime
 sf = pyforce._tPartnerNS
 svc = pyforce.Client()
 
-class BeatBoxDemo:
+class BeatBoxDemo(object):
     def login(self, username, password):
         self.password = password
         loginResult = svc.login(username, password)
