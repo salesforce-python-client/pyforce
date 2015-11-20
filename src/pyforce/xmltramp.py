@@ -123,7 +123,7 @@ class Element(object):
                         inprefixes.copy()
                     )
                 else:
-                    raise TypeError, "I wasn't expecting "+repr(x)+"."
+                    raise TypeError("I wasn't expecting " + repr(x) + ".")
             if multiline and content:
                 out += '\n' + ('\t' * (recursive-1))
         else:
@@ -145,14 +145,15 @@ class Element(object):
 
     def __getattr__(self, n):
         if n[0] == '_':
-            raise AttributeError, \
+            raise AttributeError(
                 "Use foo['" + n + "'] to access the child element."
+            )
         if self._dNS:
             n = (self._dNS, n)
         for x in self._dir:
             if isinstance(x, Element) and x._name == n:
                 return x
-        raise AttributeError, 'No child element named \''+n+"'"
+        raise AttributeError('No child element named \'' + n + "'")
 
     def __hasattr__(self, n):
         for x in self._dir:
