@@ -372,7 +372,7 @@ class Client(BaseClient):
                 whereClause
             )
         else:
-            raise RuntimeError, "Wrong number of arguments to query method."
+            raise RuntimeError("Wrong number of arguments to query method.")
 
         res = BaseClient.query(self, queryString)
         # calculate the union of the sets of record types from each record
@@ -549,8 +549,9 @@ def _doPrep(field_dict):
             else:
                 field_dict[key] = ";".join(value)
     if 'fieldsToNull' in field_dict:
-        raise ValueError, \
+        raise ValueError(
             "fieldsToNull should be populated by the client, not the caller."
+        )
     field_dict['fieldsToNull'] = fieldsToNull
 
 # sObjects can be 1 or a list. If values are python lists or tuples, we

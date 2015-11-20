@@ -1,3 +1,4 @@
+'''pyforce is there to access the RESTful Force.com API'''
 import logging
 from xmlclient import _tPartnerNS, _tSObjectNS, _tSoapNS, SoapFaultError,\
     SessionTimeoutError, DEFAULT_SERVER_URL

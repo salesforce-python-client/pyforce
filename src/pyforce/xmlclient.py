@@ -349,7 +349,7 @@ class XmlWriter(object):
 
     def endDocument(self):
         self.xg.endDocument()
-        if (self.__gzip not None):
+        if (self.__gzip != None):
             self.__gzip.close()
         return self.__buf.getvalue()
 
@@ -466,7 +466,7 @@ class SoapEnvelope(object):
                     response = None
                 attempt += 1
         if not response:
-            raise RuntimeError, 'No response from Salesforce'
+            raise RuntimeError('No response from Salesforce')
 
         if response.getheader('content-encoding', '') == 'gzip':
             rawResponse = gzip.GzipFile(fileobj=StringIO(rawResponse)).read()
