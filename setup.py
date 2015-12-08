@@ -11,5 +11,5 @@ setup(name='pyforce',
     long_description = open('README.md').read() + "\n" + open('CHANGES.txt').read(),
     license = "GNU GENERAL PUBLIC LICENSE Version 2",
     keywords = "python salesforce salesforce.com",
-    url = "https://github.com/idbentley/pyforce",
+    url = "https://github.com/alanjcastonguay/pyforce",
     )
