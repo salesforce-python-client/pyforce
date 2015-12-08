@@ -1,7 +1,10 @@
 Changelog
 =========
 
-1.6 (2105-04-27)
+1.7 (2015-12-08)
+ Address type marshalling to Dict. PEP8 cleanup. New-style exception classes.
+
+1.6 (2015-04-27)
  Introduce logout functionality. New maintainer.
 
 1.5 (2014-10-30)
