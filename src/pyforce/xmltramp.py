@@ -36,7 +36,8 @@ def quote(x, elt=True):
     return x
 
 
-class Element(object):
+# This needs to remain old style class until more investigation can be done 
+class Element:
     def __init__(self, name, attrs=None, children=None, prefixes=None):
         if islst(name) and name[0] is None:
             name = name[1]
