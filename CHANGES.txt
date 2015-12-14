@@ -1,6 +1,9 @@
 Changelog
 =========
 
+1.7.1 (2015-12-14)
+ Corrected regression bug in xmltramp when updating to new style classes. Fixes issue 26.
+
 1.7 (2015-12-08)
  Address type marshalling to Dict. PEP8 cleanup. New-style exception classes.
 
