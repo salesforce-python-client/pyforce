@@ -1,9 +1,15 @@
 """xmltramp: Make XML documents easily accessible."""
 
+from xml.sax.handler import EntityResolver, DTDHandler, ContentHandler,\
+    ErrorHandler
+from xml.sax import make_parser
+from xml.sax.handler import feature_namespaces
+
 __version__ = "2.18"
 __author__ = "Aaron Swartz"
 __credits__ = "Many thanks to pjz, bitsko, and DanC."
 __copyright__ = "(C) 2003-2006 Aaron Swartz. GNU GPL 2."
+
 
 if not hasattr(__builtins__, 'True'):
     True = 1
@@ -37,7 +43,8 @@ def quote(x, elt=True):
 
 
 # This needs to remain old style class until more investigation can be done
-class Element:
+# Invalid class heritance: dict, object
+class Element(object):
     def __init__(self, name, attrs=None, children=None, prefixes=None):
         if islst(name) and name[0] is None:
             name = name[1]
@@ -169,22 +176,27 @@ class Element:
             self[n] = v
 
     def __getitem__(self, n):
-        if isinstance(n, type(0)):  # d[1] == d._dir[1]
+        if isinstance(n, int):  # d[1] == d._dir[1]
             return self._dir[n]
-        elif isinstance(n, slice(0).__class__):
+        elif isinstance(n, slice):
             # numerical slices
-            if isinstance(n.start, type(0)):
+            if isinstance(n.start, int):
                 return self._dir[n.start:n.stop]
-
-            # d['foo':] == all <foo>s
-            n = n.start
-            if self._dNS and not islst(n):
-                n = (self._dNS, n)
-            out = []
-            for x in self._dir:
-                if isinstance(x, Element) and x._name == n:
-                    out.append(x)
-            return out
+            elif isinstance(n.stop, int):
+                return self._dir[n.start:n.stop]
+            elif n.start is None and n.stop is None:
+                return self._dir
+            else:
+                # 
+                # d['foo':] == all <foo>s
+                n = n.start
+                if self._dNS and not islst(n):
+                    n = (self._dNS, n)
+                out = []
+                for x in self._dir:
+                    if isinstance(x, Element) and x._name == n:
+                        out.append(x)
+                return out
         else:  # d['foo'] == first <foo>
             if self._dNS and not islst(n):
                 n = (self._dNS, n)
@@ -271,9 +283,6 @@ class Namespace(object):
     def __getitem__(self, n):
         return (self.__uri, n)
 
-from xml.sax.handler import EntityResolver, DTDHandler, ContentHandler,\
-    ErrorHandler
-
 
 class Seeder(EntityResolver, DTDHandler, ContentHandler, ErrorHandler):
     def __init__(self):
@@ -320,9 +329,6 @@ class Seeder(EntityResolver, DTDHandler, ContentHandler, ErrorHandler):
             self.stack[-1]._dir.append(element)
         else:
             self.result = element
-
-from xml.sax import make_parser
-from xml.sax.handler import feature_namespaces
 
 
 def seed(fileobj):
