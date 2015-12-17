@@ -16,14 +16,16 @@ if not hasattr(__builtins__, 'True'):
     False = 0
 
 
-def isstr(f):
-    return isinstance(f, type('')) or isinstance(f, type(u''))
+def isstr(mystring):
+    '''Check if string is a string or unicode'''
+    return isinstance(mystring, str) or isinstance(mystring, unicode)
 
 
-def islst(f):
-    return isinstance(f, type(())) or isinstance(f, type([]))
+def islst(myitem):
+    '''Check if item is a tuple or list'''
+    return isinstance(myitem, tuple) or isinstance(myitem, list)
 
-empty = {
+EMPTY = {
     'http://www.w3.org/1999/xhtml': [
         'img', 'br', 'hr', 'meta', 'link', 'base', 'param', 'input', 'col',
         'area'
@@ -31,19 +33,18 @@ empty = {
 }
 
 
-def quote(x, elt=True):
-    if elt and '<' in x and len(x) > 24 and x.find(']]>') == -1:
-        return "<![CDATA["+x+"]]>"
+def quote(myitem, elt=True):
+    '''URL encode string'''
+    if elt and '<' in myitem and len(myitem) > 24 and myitem.find(']]>') == -1:
+        return '<![CDATA[%s]]>' % (myitem)
     else:
-        x = x.replace('&', '&amp;').\
+        myitem = myitem.replace('&', '&amp;').\
             replace('<', '&lt;').replace(']]>', ']]&gt;')
     if not elt:
-        x = x.replace('"', '&quot;')
-    return x
+        myitem = myitem.replace('"', '&quot;')
+    return myitem
 
 
-# This needs to remain old style class until more investigation can be done
-# Invalid class heritance: dict, object
 class Element(object):
     def __init__(self, name, attrs=None, children=None, prefixes=None):
         if islst(name) and name[0] is None:
@@ -105,8 +106,8 @@ class Element(object):
         attributes = arep(self._attrs, inprefixes, recursive)
         out = '<' + qname(self._name, inprefixes) + attributes
 
-        if not self._dir and (self._name[0] in empty.keys()
-                              and self._name[1] in empty[self._name[0]]):
+        if not self._dir and (self._name[0] in EMPTY.keys()
+                              and self._name[1] in EMPTY[self._name[0]]):
             out += ' />'
             return out
 
@@ -179,15 +180,10 @@ class Element(object):
         if isinstance(n, int):  # d[1] == d._dir[1]
             return self._dir[n]
         elif isinstance(n, slice):
-            # numerical slices
-            if isinstance(n.start, int):
-                return self._dir[n.start:n.stop]
-            elif isinstance(n.stop, int):
-                return self._dir[n.start:n.stop]
-            elif n.start is None and n.stop is None:
-                return self._dir
+            # # numerical slices
+            if isinstance(n.start, int) or n.start is None:
+                return self._dir[n]
             else:
-                # 
                 # d['foo':] == all <foo>s
                 n = n.start
                 if self._dNS and not islst(n):
@@ -197,6 +193,8 @@ class Element(object):
                     if isinstance(x, Element) and x._name == n:
                         out.append(x)
                 return out
+        elif n is None:
+            return self._dir
         else:  # d['foo'] == first <foo>
             if self._dNS and not islst(n):
                 n = (self._dNS, n)
