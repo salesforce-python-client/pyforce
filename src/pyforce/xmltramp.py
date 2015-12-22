@@ -1,23 +1,31 @@
 """xmltramp: Make XML documents easily accessible."""
 
-__version__ = "2.16"
+from xml.sax.handler import EntityResolver, DTDHandler, ContentHandler,\
+    ErrorHandler
+from xml.sax import make_parser
+from xml.sax.handler import feature_namespaces
+
+__version__ = "2.18"
 __author__ = "Aaron Swartz"
 __credits__ = "Many thanks to pjz, bitsko, and DanC."
-__copyright__ = "(C) 2003 Aaron Swartz. GNU GPL 2."
+__copyright__ = "(C) 2003-2006 Aaron Swartz. GNU GPL 2."
+
 
 if not hasattr(__builtins__, 'True'):
     True = 1
     False = 0
 
 
-def isstr(f):
-    return isinstance(f, type('')) or isinstance(f, type(u''))
+def isstr(mystring):
+    '''Check if string is a string or unicode'''
+    return isinstance(mystring, str) or isinstance(mystring, unicode)
 
 
-def islst(f):
-    return isinstance(f, type(())) or isinstance(f, type([]))
+def islst(myitem):
+    '''Check if item is a tuple or list'''
+    return isinstance(myitem, tuple) or isinstance(myitem, list)
 
-empty = {
+EMPTY = {
     'http://www.w3.org/1999/xhtml': [
         'img', 'br', 'hr', 'meta', 'link', 'base', 'param', 'input', 'col',
         'area'
@@ -25,19 +33,19 @@ empty = {
 }
 
 
-def quote(x, elt=True):
-    if elt and '<' in x and len(x) > 24 and x.find(']]>') == -1:
-        return "<![CDATA["+x+"]]>"
+def quote(myitem, elt=True):
+    '''URL encode string'''
+    if elt and '<' in myitem and len(myitem) > 24 and myitem.find(']]>') == -1:
+        return '<![CDATA[%s]]>' % (myitem)
     else:
-        x = x.replace('&', '&amp;').\
+        myitem = myitem.replace('&', '&amp;').\
             replace('<', '&lt;').replace(']]>', ']]&gt;')
     if not elt:
-        x = x.replace('"', '&quot;')
-    return x
+        myitem = myitem.replace('"', '&quot;')
+    return myitem
 
 
-# This needs to remain old style class until more investigation can be done 
-class Element:
+class Element(object):
     def __init__(self, name, attrs=None, children=None, prefixes=None):
         if islst(name) and name[0] is None:
             name = name[1]
@@ -98,8 +106,8 @@ class Element:
         attributes = arep(self._attrs, inprefixes, recursive)
         out = '<' + qname(self._name, inprefixes) + attributes
 
-        if not self._dir and (self._name[0] in empty.keys()
-                              and self._name[1] in empty[self._name[0]]):
+        if not self._dir and (self._name[0] in EMPTY.keys()
+                              and self._name[1] in EMPTY[self._name[0]]):
             out += ' />'
             return out
 
@@ -154,7 +162,7 @@ class Element:
         for x in self._dir:
             if isinstance(x, Element) and x._name == n:
                 return x
-        raise AttributeError('No child element named \'' + n + "'")
+        raise AttributeError('No child element named %s' % repr(n))
 
     def __hasattr__(self, n):
         for x in self._dir:
@@ -169,29 +177,31 @@ class Element:
             self[n] = v
 
     def __getitem__(self, n):
-        if isinstance(n, type(0)):  # d[1] == d._dir[1]
+        if isinstance(n, int):  # d[1] == d._dir[1]
             return self._dir[n]
-        elif isinstance(n, slice(0).__class__):
-            # numerical slices
-            if isinstance(n.start, type(0)):
-                return self._dir[n.start:n.stop]
-
-            # d['foo':] == all <foo>s
-            n = n.start
-            if self._dNS and not islst(n):
-                n = (self._dNS, n)
-            out = []
-            for x in self._dir:
-                if isinstance(x, Element) and x._name == n:
-                    out.append(x)
-            return out
+        elif isinstance(n, slice):
+            # # numerical slices
+            if isinstance(n.start, int) or n.start is None:
+                return self._dir[n]
+            else:
+                # d['foo':] == all <foo>s
+                n = n.start
+                if self._dNS and not islst(n):
+                    n = (self._dNS, n)
+                out = []
+                for x in self._dir:
+                    if isinstance(x, Element) and x._name == n:
+                        out.append(x)
+                return out
+        elif n is None:
+            return self._dir
         else:  # d['foo'] == first <foo>
             if self._dNS and not islst(n):
                 n = (self._dNS, n)
             for x in self._dir:
                 if isinstance(x, Element) and x._name == n:
                     return x
-            raise KeyError
+            raise KeyError(n)
 
     def __setitem__(self, n, v):
         if isinstance(n, type(0)):  # d[1]
@@ -252,7 +262,7 @@ class Element:
         if len(_pos) > 1:
             for i in range(0, len(_pos), 2):
                 self._attrs[_pos[i]] = _pos[i+1]
-        if len(_pos) == 1 is not None:
+        if len(_pos) == 1:
             return self._attrs[_pos[0]]
         if len(_pos) == 0:
             return self._attrs
@@ -270,9 +280,6 @@ class Namespace(object):
 
     def __getitem__(self, n):
         return (self.__uri, n)
-
-from xml.sax.handler import EntityResolver, DTDHandler, ContentHandler,\
-    ErrorHandler
 
 
 class Seeder(EntityResolver, DTDHandler, ContentHandler, ErrorHandler):
@@ -320,9 +327,6 @@ class Seeder(EntityResolver, DTDHandler, ContentHandler, ErrorHandler):
             self.stack[-1]._dir.append(element)
         else:
             self.result = element
-
-from xml.sax import make_parser
-from xml.sax.handler import feature_namespaces
 
 
 def seed(fileobj):
