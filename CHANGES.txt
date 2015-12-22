@@ -1,6 +1,10 @@
 Changelog
 =========
 
+1.7.2 (2015-12-21)
+ Upgraded xmltramp to 2.18 with some inline patching.
+ Experimenting with Travis-CI integration.
+ 
 1.7.1 (2015-12-14)
  Corrected regression bug in xmltramp when updating to new style classes. Fixes issue 26.
 
