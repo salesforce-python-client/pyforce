@@ -1,0 +1,13 @@
+language: python
+python:
+- '2.7'
+script:
+- touch foo
+deploy:
+  provider: pypi
+  user: alanjcastonguay
+  password:
+    secure: p+fl8//PVXl+5NSMTA0GGwv2HGv4z1DqMkU3rQ1QGpt7Qm8yLwLPPHkQ1tRktZh/Mv01koysKeST3PG9w66wW0r85NqaH2aKvL73+6I/7MYqds/963tWf7CfkGl8oNKYXx4/+RmfDLhQyMyeLVNsNFMl1bmUSq2HlnUyAiLhNLx9pm6lOjCZ7Lvb6lkxukOtvbbpEnhfj0zxMP0MLGy5/J0JYcwasyfUSdfQiHBygltxRIMVLI3HkZtLvVmfrzsXvnUgI8f91gKrGbabAwbvazTZwk0wNBxo9dWyn3trDwYhkUjn8tPiPNnGHvmzBT/DjBKnyUStx8Mdtz+o+GRwt2s1XdpqpaN980wld44x6peUOE0EAKXQ3oaOHWKXyL8wDsoZJmJa1oNRVse4GkvPCLvf9aBVVAT9hIN2QwSAcsTZzR6e9Arng91GKnHzFYcB6qm37Gx2E7tPHGZR2LBdR//DmI9XA+1XREhz3ypRNxe5oucmPAS/1eoyHu2u5c+iOYJAc++VQv6vtriIe+aOWR5mhshNz8uCA/v8mauh0c31MLqI8nCCsst3gXxDaPSKems09LsxScYfD9NyXy615TeOfp/Alw1TOxZx1xVq82FRhxZlcwKjUlDAeskWls9m522+yGiyGpRf6tVN2PIZf0OAqE4qDwVy/ti1VfoOfF8=
+  on:
+    tags: true
+    branch: master
