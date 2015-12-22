@@ -1,3 +1,5 @@
+![Pypi Version](https://img.shields.io/pypi/v/pyforce.svg) ![Pypi Downloads](https://img.shields.io/pypi/dm/pyforce.svg)
+
 Introduction
 ============
 
