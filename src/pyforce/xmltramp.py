@@ -83,7 +83,7 @@ class Element(object):
         def arep(a, inprefixes, addns=1):
             out = ''
 
-            for p in self._prefixes.keys():
+            for p in sorted(self._prefixes.keys()):
                 if not p in inprefixes.keys():
                     if addns:
                         out += ' xmlns'
@@ -93,9 +93,8 @@ class Element(object):
                         out += '="'+quote(p, False)+'"'
                     inprefixes[p] = self._prefixes[p]
 
-            for k in a.keys():
+            for k in sorted(a.keys()):
                 out += ' %s="%s"' % (qname(k, inprefixes), quote(a[k], False))
-
             return out
 
         inprefixes = inprefixes or {
@@ -413,15 +412,15 @@ def unittest():
 
     assert repr(d) == '<doc version="2.7182818284590451">...</doc>'
     assert d.__repr__(1) == (
-        '<doc xmlns="http://example.org/bar" xmlns:dc="http://purl.org/dc/eleme'
-        'nts/1.1/" xmlns:bbc="http://example.org/bbc" version="2.71828182845904'
+        '<doc xmlns="http://example.org/bar" xmlns:bbc="http://example.org/bbc"'
+        ' xmlns:dc="http://purl.org/dc/elements/1.1/" version="2.71828182845904'
         '51"><author>John Polk and John Palfrey</author><dc:creator>John Polk</'
         'dc:creator><dc:creator>John Palfrey</dc:creator><bbc:show bbc:station='
         '"4">Buffy</bbc:show></doc>'
     )
     assert d.__repr__(1,1) == (
-        '<doc xmlns="http://example.org/bar" xmlns:dc="http://purl.org/dc/eleme'
-        'nts/1.1/" xmlns:bbc="http://example.org/bbc" version="2.71828182845904'
+        '<doc xmlns="http://example.org/bar" xmlns:bbc="http://example.org/bbc"'
+        ' xmlns:dc="http://purl.org/dc/elements/1.1/" version="2.71828182845904'
         '51">\n\t<author>John Polk and John Palfrey</author>\n\t<dc:creator>Joh'
         'n Polk</dc:creator>\n\t<dc:creator>John Palfrey</dc:creator>\n\t<bbc:s'
         'how bbc:station="4">Buffy</bbc:show>\n</doc>'
