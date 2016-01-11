@@ -102,7 +102,7 @@ class Client(BaseClient):
         data['encoding'] = str(res[_tPartnerNS.encoding])
         data['maxBatchSize'] = int(str(res[_tPartnerNS.maxBatchSize]))
         sobjects = list()
-        for r in res[_tPartnerNS.sobjects:]:
+        for r in res[_tPartnerNS.sobjects,]:
             d = dict()
             d['activateable'] = _bool(r[_tPartnerNS.activateable])
             d['createable'] = _bool(r[_tPartnerNS.createable])
@@ -134,7 +134,7 @@ class Client(BaseClient):
             d['updateable'] = _bool(r[_tPartnerNS.updateable])
             sobjects.append(SObject(**d))
         data['sobjects'] = sobjects
-        data['types'] = [str(t) for t in res[_tPartnerNS.types:]]
+        data['types'] = [str(t) for t in res[_tPartnerNS.types,]]
         if not data['types']:
             # BBB for code written against API < 17.0
             data['types'] = [s.name for s in data['sobjects']]
@@ -148,7 +148,7 @@ class Client(BaseClient):
         for r in res:
             d = dict()
             d['activateable'] = _bool(r[_tPartnerNS.activateable])
-            rawreldata = r[_tPartnerNS.ChildRelationships:]
+            rawreldata = r[_tPartnerNS.ChildRelationships,]
             relinfo = [_extractChildRelInfo(cr) for cr in rawreldata]
             d['ChildRelationships'] = relinfo
             d['createable'] = _bool(r[_tPartnerNS.createable])
@@ -165,7 +165,7 @@ class Client(BaseClient):
                 d['feedEnabled'] = _bool(r[_tPartnerNS.feedEnabled])
             except KeyError:
                 pass
-            fields = r[_tPartnerNS.fields:]
+            fields = r[_tPartnerNS.fields,]
             fields = [_extractFieldInfo(f) for f in fields]
             field_map = dict()
             for f in fields:
@@ -179,7 +179,7 @@ class Client(BaseClient):
             d['name'] = str(r[_tPartnerNS.name])
             d['queryable'] = _bool(r[_tPartnerNS.queryable])
             d['recordTypeInfos'] = ([_extractRecordTypeInfo(rti) for rti in
-                                    r[_tPartnerNS.recordTypeInfos:]])
+                                    r[_tPartnerNS.recordTypeInfos,]])
             d['replicateable'] = _bool(r[_tPartnerNS.replicateable])
             d['retrieveable'] = _bool(r[_tPartnerNS.retrieveable])
             d['searchable'] = _bool(r[_tPartnerNS.searchable])
@@ -208,7 +208,7 @@ class Client(BaseClient):
             d['success'] = success = _bool(r[_tPartnerNS.success])
             if not success:
                 d['errors'] = [_extractError(e)
-                               for e in r[_tPartnerNS.errors:]]
+                               for e in r[_tPartnerNS.errors,]]
             else:
                 d['errors'] = list()
         return data
@@ -226,7 +226,7 @@ class Client(BaseClient):
             d['success'] = success = _bool(resu[_tPartnerNS.success])
             if not success:
                 d['errors'] = [_extractError(e)
-                               for e in resu[_tPartnerNS.errors:]]
+                               for e in resu[_tPartnerNS.errors,]]
             else:
                 d['errors'] = list()
                 d['account_id'] = str(resu[_tPartnerNS.accountId])
@@ -272,7 +272,7 @@ class Client(BaseClient):
             d['success'] = success = _bool(resu[_tPartnerNS.success])
             if not success:
                 d['errors'] = [_extractError(e)
-                               for e in resu[_tPartnerNS.errors:]]
+                               for e in resu[_tPartnerNS.errors,]]
             else:
                 d['errors'] = list()
         return data
@@ -308,7 +308,7 @@ class Client(BaseClient):
             d['success'] = success = _bool(r[_tPartnerNS.success])
             if not success:
                 d['errors'] = [_extractError(e)
-                               for e in r[_tPartnerNS.errors:]]
+                               for e in r[_tPartnerNS.errors,]]
             else:
                 d['errors'] = list()
         return data
@@ -337,12 +337,12 @@ class Client(BaseClient):
                 fname = str(field._name[1])
                 if isObject(field):
                     record[fname] = self._extractRecord(
-                        r[field._name:][0], typeDescs
+                        r[field._name,][0], typeDescs
                     )
                 elif isQueryResult(field):
                     record[fname] = QueryRecordSet(
                         records=[self._extractRecord(rec, typeDescs) for rec
-                                 in field[_tPartnerNS.records:]],
+                                 in field[_tPartnerNS.records,]],
                         done=field[_tPartnerNS.done],
                         size=int(str(field[_tPartnerNS.size]))
                     )
@@ -377,13 +377,13 @@ class Client(BaseClient):
         res = BaseClient.query(self, queryString)
         # calculate the union of the sets of record types from each record
         types = reduce(lambda a, b: a | b, [getRecordTypes(r) for r in
-                                        res[_tPartnerNS.records:]], set())
+                                        res[_tPartnerNS.records,]], set())
         new_types = types - set(typeDescs.keys())
         if new_types:
             typeDescs.update(self.queryTypesDescriptions(new_types))
         data = QueryRecordSet(
             records=[self._extractRecord(r, typeDescs) for r in
-                     res[_tPartnerNS.records:]],
+                     res[_tPartnerNS.records,]],
             done=_bool(res[_tPartnerNS.done]),
             size=int(str(res[_tPartnerNS.size])),
             queryLocator=str(res[_tPartnerNS.queryLocator])
@@ -400,13 +400,13 @@ class Client(BaseClient):
         res = BaseClient.queryMore(self, locator)
         # calculate the union of the sets of record types from each record
         types = reduce(lambda a, b: a | b, [getRecordTypes(r) for r in
-                       res[_tPartnerNS.records:]], set())
+                       res[_tPartnerNS.records,]], set())
         new_types = types - set(typeDescs.keys())
         if new_types:
             typeDescs.update(self.queryTypesDescriptions(new_types))
         data = QueryRecordSet(
             records=[self._extractRecord(r, typeDescs) for r in
-                     res[_tPartnerNS.records:]],
+                     res[_tPartnerNS.records,]],
             done=_bool(res[_tPartnerNS.done]),
             size=int(str(res[_tPartnerNS.size])),
             queryLocator=str(res[_tPartnerNS.queryLocator])
@@ -444,7 +444,7 @@ class Client(BaseClient):
             d['success'] = success = _bool(r[_tPartnerNS.success])
             if not success:
                 d['errors'] = [_extractError(e)
-                               for e in r[_tPartnerNS.errors:]]
+                               for e in r[_tPartnerNS.errors,]]
             else:
                 d['errors'] = list()
         return data
@@ -462,7 +462,7 @@ class Client(BaseClient):
             d['success'] = success = _bool(r[_tPartnerNS.success])
             if not success:
                 d['errors'] = [_extractError(e)
-                               for e in r[_tPartnerNS.errors:]]
+                               for e in r[_tPartnerNS.errors,]]
             else:
                 d['errors'] = list()
             d['isCreated'] = d['created'] = _bool(r[_tPartnerNS.created])
@@ -470,7 +470,7 @@ class Client(BaseClient):
 
     def getDeleted(self, sObjectType, start, end):
         res = BaseClient.getDeleted(self, sObjectType, start, end)
-        res = res[_tPartnerNS.deletedRecords:]
+        res = res[_tPartnerNS.deletedRecords,]
         if type(res) not in (TupleType, ListType):
             res = [res]
         data = list()
@@ -487,7 +487,7 @@ class Client(BaseClient):
 
     def getUpdated(self, sObjectType, start, end):
         res = BaseClient.getUpdated(self, sObjectType, start, end)
-        res = res[_tPartnerNS.ids:]
+        res = res[_tPartnerNS.ids,]
         if type(res) not in (TupleType, ListType):
             res = [res]
         return [str(r) for r in res]
@@ -501,7 +501,7 @@ class Client(BaseClient):
         res = BaseClient.describeTabs(self)
         data = list()
         for r in res:
-            tabs = [_extractTab(t) for t in r[_tPartnerNS.tabs:]]
+            tabs = [_extractTab(t) for t in r[_tPartnerNS.tabs,]]
             d = dict(
                 label=str(r[_tPartnerNS.label]),
                 logoUrl=str(r[_tPartnerNS.logoUrl]),
@@ -595,10 +595,10 @@ def _extractFieldInfo(fdata):
     data['length'] = int(str(fdata[_tPartnerNS.length]))
     data['name'] = str(fdata[_tPartnerNS.name])
     data['nameField'] = _bool(fdata[_tPartnerNS.nameField])
-    plValues = fdata[_tPartnerNS.picklistValues:]
+    plValues = fdata[_tPartnerNS.picklistValues,]
     data['picklistValues'] = [_extractPicklistEntry(p) for p in plValues]
     data['precision'] = int(str(fdata[_tPartnerNS.precision]))
-    data['referenceTo'] = [str(r) for r in fdata[_tPartnerNS.referenceTo:]]
+    data['referenceTo'] = [str(r) for r in fdata[_tPartnerNS.referenceTo,]]
     data['restrictedPicklist'] = _bool(fdata[_tPartnerNS.restrictedPicklist])
     data['scale'] = int(str(fdata[_tPartnerNS.scale]))
     data['soapType'] = str(fdata[_tPartnerNS.soapType])
@@ -616,7 +616,7 @@ def _extractFieldInfo(fdata):
 def _extractPicklistEntry(pldata):
     data = dict()
     data['active'] = _bool(pldata[_tPartnerNS.active])
-    data['validFor'] = [str(v) for v in pldata[_tPartnerNS.validFor:]]
+    data['validFor'] = [str(v) for v in pldata[_tPartnerNS.validFor,]]
     data['defaultValue'] = _bool(pldata[_tPartnerNS.defaultValue])
     data['label'] = str(pldata[_tPartnerNS.label])
     data['value'] = str(pldata[_tPartnerNS.value])
@@ -646,7 +646,7 @@ def _extractError(edata):
     data = dict()
     data['statusCode'] = str(edata[_tPartnerNS.statusCode])
     data['message'] = str(edata[_tPartnerNS.message])
-    data['fields'] = [str(f) for f in edata[_tPartnerNS.fields:]]
+    data['fields'] = [str(f) for f in edata[_tPartnerNS.fields,]]
     return data
 
 
@@ -721,5 +721,5 @@ def getRecordTypes(xml):
             elif isQueryResult(field):
                 record_types.update(reduce(lambda x, y: x | y, [
                                     getRecordTypes(r) for r in
-                                    field[_tPartnerNS.records:]]))
+                                    field[_tPartnerNS.records,]]))
     return record_types

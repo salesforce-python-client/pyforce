@@ -91,7 +91,7 @@ class TestBeatbox(unittest.TestCase):
             "from Contact where LastName = 'Doe' and FirstName = 'Jane'")
         res = svc.query(query)
         self.assertEqual(int(str(res[partnerns.size])), 1)
-        records = res[partnerns.records:]
+        records = res[partnerns.records,]
         self.assertEqual(
             janeid, str(records[0][pyforce._tSObjectNS.Id]))
 

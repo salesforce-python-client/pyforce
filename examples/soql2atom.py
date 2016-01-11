@@ -28,7 +28,7 @@ import cgitb
 from xml.sax.xmlreader import AttributesNSImpl
 import datetime
 from urlparse import urlparse
-import os 
+import os
 import base64
 import string
 
@@ -73,15 +73,15 @@ def soql2atom(loginResult, soql, title):
     x.writeStringElement(atom_ns, "name", str(userInfo.userFullName))
     x.endElement()
     x.characters("\n")
-    rel = AttributesNSImpl( {(None, "rel"): "self", (None, "href") : thisUrl}, 
+    rel = AttributesNSImpl( {(None, "rel"): "self", (None, "href") : thisUrl},
                             {(None, "rel"): "rel",  (None, "href"): "href"})
     x.startElement(atom_ns, "link", rel)
     x.endElement()
-    x.writeStringElement(atom_ns, "updated", datetime.datetime.utcnow().isoformat() +"Z") 
+    x.writeStringElement(atom_ns, "updated", datetime.datetime.utcnow().isoformat() +"Z")
     x.writeStringElement(atom_ns, "id", thisUrl + "&userid=" + str(loginResult[pyforce._tPartnerNS.userId]))
     x.characters("\n")
     type = AttributesNSImpl({(None, u"type") : "html"}, {(None, u"type") : u"type" })
-    for row in qr[sf.records:]:
+    for row in qr[sf.records,]:
         x.startElement(atom_ns, "entry")
         desc = ""
         x.writeStringElement(atom_ns, "title", str(row[2]))
@@ -105,7 +105,7 @@ def soql2atom(loginResult, soql, title):
     print x.endDocument()
 
 def writeLink(x, namespace, localname, rel, type, href):
-    rel = AttributesNSImpl( {(None, "rel"): rel,   (None, "href"): href,   (None, "type"): type }, 
+    rel = AttributesNSImpl( {(None, "rel"): rel,   (None, "href"): href,   (None, "type"): type },
                             {(None, "rel"): "rel", (None, "href"): "href", (None, "type"): "type"})
     x.startElement(namespace, localname, rel)
     x.endElement()
@@ -129,7 +129,7 @@ else:
     if form.has_key("title"):
         title = form.getvalue("title")
     try:
-        lr = svc.login(username, password)    
+        lr = svc.login(username, password)
         soql2atom(lr, soql, title)
     except pyforce.SoapFaultError, sfe:
         if (sfe.faultCode == 'INVALID_LOGIN'):
