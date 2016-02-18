@@ -3,7 +3,7 @@
 Introduction
 ============
 
-This is a reluctant fork of the beatbox project originally authored by Simon 
+This is a reluctant fork of the beatbox project originally authored by Simon
 Fell, (his version locked at 0.92) later drastically changed by these guys
 https://code.google.com/p/salesforce-beatbox/ (versioned at 20.0).
 
@@ -46,7 +46,7 @@ Basic Usage Examples
 ====================
 
 Instantiate a Python Salesforce.com client:
-    >>> svc = pyforce.Client()
+    >>> svc = pyforce.PythonClient()
     >>> svc.login('username', 'passwordTOKEN')
 
 (Note that interacting with Salesforce.com via the API requires the use of a
@@ -66,9 +66,9 @@ Here's an example of a query for contacts with last name 'Doe':
 Add a new Lead:
 
     contact = {
-            'type': 'Lead', 
-            'LastName': 'Ian', 
-            'FirstName': 'Bentley', 
+            'type': 'Lead',
+            'LastName': 'Ian',
+            'FirstName': 'Bentley',
             'Company': '10gen'
         }
     res = svc.create(contact)
@@ -81,15 +81,15 @@ Batches work automatically (though sfdc limits the number to 200 maximum):
 
     contacts = [
         {
-            'type': 'Lead', 
-            'LastName': 'Glick', 
-            'FirstName': 'David', 
+            'type': 'Lead',
+            'LastName': 'Glick',
+            'FirstName': 'David',
             'Company': 'Individual'
         },
         {
-            'type': 'Lead', 
-            'LastName': 'Ian', 
-            'FirstName': 'Bentley', 
+            'type': 'Lead',
+            'LastName': 'Ian',
+            'FirstName': 'Bentley',
             'Company': '10gen'
         }
     ]
@@ -105,7 +105,7 @@ Send a new email, optionally using templates, including attachments and creating
     res = svc.sendEmail( [simple_email] )
     res
     [{'errors': [], 'success': True}]
-    
+
     complex_email = {
         'templateId': '00X80000002h4TV',    # Id of an EmailTemplate used for Subject and Body, supports field merge from whatId.
         'targetObjectId':'003808980000GJ',  # Id of a Contact, Lead or User which the email will be sent to.
@@ -128,7 +128,7 @@ Send a new email, optionally using templates, including attachments and creating
 More Examples
 =============
 
-The examples folder contains the examples for the xml client. For examples on 
+The examples folder contains the examples for the xml client. For examples on
 how to use the python client see the tests directory.
 
 Some of these other products that were built on top of beatbox can also provide
@@ -188,4 +188,3 @@ Run the tests::
 
     python src/pyforce/tests/test_xmlclient.py
     python src/pyforce/tests/test_pythonClient.py
-
