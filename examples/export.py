@@ -10,7 +10,7 @@ svc = pyforce.Client()
 def buildSoql(sobjectName):
     dr = svc.describeSObjects(sobjectName)
     soql = ""
-    for f in dr[sf.fields:]:
+    for f in dr[sf.fields,]:
         if len(soql) > 0: soql += ','
         soql += str(f[sf.name])
     return "select " + soql + " from " + sobjectName
@@ -35,7 +35,7 @@ def export(username, password, objectOrSoql):
     printHeaders = 1
     while True:
         if printHeaders: printColumnHeaders(qr); printHeaders = 0
-        for row in qr[sf.records:]:
+        for row in qr[sf.records,]:
             needsComma = False
             for col in row[2:]:
                 if needsComma: print ',',

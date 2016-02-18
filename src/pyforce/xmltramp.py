@@ -83,7 +83,7 @@ class Element(object):
         def arep(a, inprefixes, addns=1):
             out = ''
 
-            for p in self._prefixes.keys():
+            for p in sorted(self._prefixes.keys()):
                 if not p in inprefixes.keys():
                     if addns:
                         out += ' xmlns'
@@ -93,9 +93,8 @@ class Element(object):
                         out += '="'+quote(p, False)+'"'
                     inprefixes[p] = self._prefixes[p]
 
-            for k in a.keys():
+            for k in sorted(a.keys()):
                 out += ' %s="%s"' % (qname(k, inprefixes), quote(a[k], False))
-
             return out
 
         inprefixes = inprefixes or {
@@ -179,20 +178,19 @@ class Element(object):
     def __getitem__(self, n):
         if isinstance(n, int):  # d[1] == d._dir[1]
             return self._dir[n]
-        elif isinstance(n, slice):
-            # # numerical slices
-            if isinstance(n.start, int) or n.start is None:
-                return self._dir[n]
-            else:
-                # d['foo':] == all <foo>s
-                n = n.start
-                if self._dNS and not islst(n):
-                    n = (self._dNS, n)
-                out = []
-                for x in self._dir:
-                    if isinstance(x, Element) and x._name == n:
-                        out.append(x)
-                return out
+        elif isinstance(n, slice) and (
+            isinstance(n.start, int) or n.start is None
+        ):
+            return self._dir[n]
+        elif isinstance(n, tuple) and len(n) == 1:  # d['foo',] == all <foo>s
+            n = n[0]
+            if self._dNS and not islst(n):
+                n = (self._dNS, n)
+            out = []
+            for x in self._dir:
+                if isinstance(x, Element) and x._name == n:
+                    out.append(x)
+            return out
         elif n is None:
             return self._dir
         else:  # d['foo'] == first <foo>
@@ -201,14 +199,14 @@ class Element(object):
             for x in self._dir:
                 if isinstance(x, Element) and x._name == n:
                     return x
-            raise KeyError(n)
+        raise KeyError(n)
 
     def __setitem__(self, n, v):
         if isinstance(n, type(0)):  # d[1]
             self._dir[n] = v
-        elif isinstance(n, slice(0).__class__):
-            # d['foo':] adds a new foo
-            n = n.start
+        elif isinstance(n, tuple) and len(n) == 1:
+            # d['foo',] adds a new foo
+            n = n[0]
             if self._dNS and not islst(n):
                 n = (self._dNS, n)
 
@@ -392,9 +390,9 @@ def unittest():
     assert d[0]._name == "bar"
     assert len(d[:]) == len(d._dir)
     assert len(d[1:]) == len(d._dir) - 1
-    assert len(d['bar':]) == 2
-    d['bar':] = 'baz'
-    assert len(d['bar':]) == 3
+    assert len(d['bar',]) == 2
+    d['bar',] = 'baz'
+    assert len(d['bar',]) == 3
     assert d['bar']._name == 'bar'
 
     d = Element('foo')
@@ -414,18 +412,18 @@ def unittest():
 
     assert repr(d) == '<doc version="2.7182818284590451">...</doc>'
     assert d.__repr__(1) == (
-        '<doc xmlns:bbc="http://example.org/bbc" xmlns:dc="http://purl.org/dc/'
-        'elements/1.1/" xmlns="http://example.org/bar" version="2.718281828459'
-        '0451"><author>John Polk and John Palfrey</author><dc:creator>John Pol'
-        'k</dc:creator><dc:creator>John Palfrey</dc:creator><bbc:show bbc:stat'
-        'ion="4">Buffy</bbc:show></doc>'
+        '<doc xmlns="http://example.org/bar" xmlns:bbc="http://example.org/bbc"'
+        ' xmlns:dc="http://purl.org/dc/elements/1.1/" version="2.71828182845904'
+        '51"><author>John Polk and John Palfrey</author><dc:creator>John Polk</'
+        'dc:creator><dc:creator>John Palfrey</dc:creator><bbc:show bbc:station='
+        '"4">Buffy</bbc:show></doc>'
     )
-    assert d.__repr__(1, 1) == (
-        '<doc xmlns:bbc="http://example.org/bbc" xmlns:dc="http://purl.org/dc/'
-        'elements/1.1/" xmlns="http://example.org/bar" version="2.718281828459'
-        '0451">\n\t<author>John Polk and John Palfrey</author>\n\t<dc:creator>'
-        'John Polk</dc:creator>\n\t<dc:creator>John Palfrey</dc:creator>\n\t<b'
-        'bc:show bbc:station="4">Buffy</bbc:show>\n</doc>'
+    assert d.__repr__(1,1) == (
+        '<doc xmlns="http://example.org/bar" xmlns:bbc="http://example.org/bbc"'
+        ' xmlns:dc="http://purl.org/dc/elements/1.1/" version="2.71828182845904'
+        '51">\n\t<author>John Polk and John Palfrey</author>\n\t<dc:creator>Joh'
+        'n Polk</dc:creator>\n\t<dc:creator>John Palfrey</dc:creator>\n\t<bbc:s'
+        'how bbc:station="4">Buffy</bbc:show>\n</doc>'
     )
 
     assert repr(parse("<doc xml:lang='en' />")) == '<doc xml:lang="en"></doc>'
@@ -434,12 +432,12 @@ def unittest():
     assert d.author._name == doc.author
     assert str(d[dc.creator]) == "John Polk"
     assert d[dc.creator]._name == dc.creator
-    assert str(d[dc.creator:][1]) == "John Palfrey"
+    assert str(d[dc.creator,][1]) == "John Palfrey"
     d[dc.creator] = "Me!!!"
     assert str(d[dc.creator]) == "Me!!!"
-    assert len(d[dc.creator:]) == 1
-    d[dc.creator:] = "You!!!"
-    assert len(d[dc.creator:]) == 2
+    assert len(d[dc.creator,]) == 1
+    d[dc.creator,] = "You!!!"
+    assert len(d[dc.creator,]) == 2
 
     assert d[bbc.show](bbc.station) == "4"
     d[bbc.show](bbc.station, "5")

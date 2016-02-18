@@ -58,7 +58,7 @@ register(texttypes, textMarshaller)
 
 
 def multiMarshaller(fieldname, xml, ns):
-    asString = str(xml[getattr(ns, fieldname):][0])
+    asString = str(xml[getattr(ns, fieldname),][0])
     if not asString:
         return []
     return asString.split(';')

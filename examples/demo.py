@@ -21,7 +21,7 @@ class BeatBoxDemo(object):
     def describeGlobal(self):
         print "\ndescribeGlobal"
         dg = svc.describeGlobal()
-        for t in dg[sf.types:]:
+        for t in dg[sf.types,]:
             print str(t)
 
     def describeTabs(self):
@@ -34,29 +34,29 @@ class BeatBoxDemo(object):
         qr = svc.query("select Id, Name from Account")
         print "query size = " + str(qr[sf.size])
 
-        for rec in qr[sf.records:]:
+        for rec in qr[sf.records,]:
             print str(rec[0]) + " : " + str(rec[2]) + " : " + str(rec[3])
 
         if (str(qr[sf.done]) == 'false'):
             print "\nqueryMore"
             qr = svc.queryMore(str(qr[sf.queryLocator]))
-            for rec in qr[sf.records:]:
+            for rec in qr[sf.records,]:
                 print str(rec[0]) + " : " + str(rec[2]) + " : " + str(rec[3])
 
     def upsert(self):
         print "\nupsert"
-        t = { 'type': 'Task', 
-            'ChandlerId__c': '12345', 
-            'subject': 'BeatBoxTest updated', 
+        t = { 'type': 'Task',
+            'ChandlerId__c': '12345',
+            'subject': 'BeatBoxTest updated',
             'ActivityDate' : datetime.date(2006,2,20) }
 
         ur = svc.upsert('ChandlerId__c', t)
         print str(ur[sf.success]) + " -> " + str(ur[sf.id])
 
-        t = {'type': 'Event', 
-            'ChandlerId__c': '67890', 
-            'durationinminutes': 45, 
-            'subject': 'BeatBoxTest', 
+        t = {'type': 'Event',
+            'ChandlerId__c': '67890',
+            'durationinminutes': 45,
+            'subject': 'BeatBoxTest',
             'ActivityDateTime' : datetime.datetime(2006,2,20,13,30,30),
             'IsPrivate': False }
         ur = svc.upsert('ChandlerId__c', t)
@@ -141,22 +141,22 @@ class BeatBoxDemo(object):
     def describeSObjects(self):
         print "\ndescribeSObjects(Account)"
         desc = svc.describeSObjects("Account")
-        for f in desc[sf.fields:]:
+        for f in desc[sf.fields,]:
             print "\t" + str(f[sf.name])
 
         print "\ndescribeSObjects(Lead, Contact)"
         desc = svc.describeSObjects(["Lead", "Contact"])
         for d in desc:
             print str(d[sf.name]) + "\n" + ( "-" * len(str(d[sf.name])))
-            for f in d[sf.fields:]:
+            for f in d[sf.fields,]:
                 print "\t" + str(f[sf.name])
 
     def describeLayout(self):
         print "\ndescribeLayout(Account)"
         desc = svc.describeLayout("Account")
-        for layout in desc[sf.layouts:]:
+        for layout in desc[sf.layouts,]:
             print "sections in detail layout " + str(layout[sf.id])
-            for s in layout[sf.detailLayoutSections:]:
+            for s in layout[sf.detailLayoutSections,]:
                 print "\t" + str(s[sf.heading])
 
 
