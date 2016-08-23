@@ -721,5 +721,5 @@ def getRecordTypes(xml):
             elif isQueryResult(field):
                 record_types.update(reduce(lambda x, y: x | y, [
                                     getRecordTypes(r) for r in
-                                    field[_tPartnerNS.records,]]))
+                                    field[_tPartnerNS.records,]], set()))
     return record_types
