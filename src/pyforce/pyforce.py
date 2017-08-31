@@ -1,11 +1,13 @@
-import logging
-from xmlclient import _tPartnerNS, _tSObjectNS, _tSchemaInstanceNS
-from xmlclient import Client as BaseClient
-from marshall import marshall
-from types import TupleType, ListType
 import re
 import copy
-from xmltramp import Namespace
+import logging
+from functools import reduce
+
+from pyforce.marshall import marshall
+from pyforce.xmlclient import _tPartnerNS, _tSObjectNS, _tSchemaInstanceNS
+from pyforce.xmlclient import Client as BaseClient
+from pyforce.xmltramp import Namespace
+
 
 _tSchemaNS = Namespace('http://www.w3.org/2001/XMLSchema')
 
@@ -16,22 +18,16 @@ _logger = logging.getLogger("pyforce.{0}".format(__name__))
 
 
 class QueryRecord(dict):
-
     def __getattr__(self, n):
-        try:
-            return self[n]
-        except KeyError:
-            return dict.__getattr__(self, n)
+        return self[n]
 
     def __setattr__(self, n, v):
         self[n] = v
 
 
 class QueryRecordSet(list):
-
     def __init__(self, records, done, size, **kw):
-        for r in records:
-            self.append(r)
+        super(QueryRecordSet, self).__init__(records)
         self.done = done
         self.size = size
         for k, v in kw.items():
@@ -42,19 +38,17 @@ class QueryRecordSet(list):
         return self
 
     def __getitem__(self, n):
-        if type(n) == type(''):  # This should be a isinstance statement
-                                 # Not sure if should be None or str
-            try:
-                return getattr(self, n)
-            except AttributeError, n:
+        if isinstance(n, str):
+            attr = getattr(self, n, None)
+            if attr is None:
                 raise KeyError
-        else:
-            return list.__getitem__(self, n)
+        raise ValueError(n)
 
 
 class SObject(object):
-
     def __init__(self, **kw):
+        self.fields = {}
+
         for k, v in kw.items():
             setattr(self, k, v)
 
@@ -67,7 +61,6 @@ class SObject(object):
 
 
 class Client(BaseClient):
-
     cacheTypeDescriptions = False
 
     def __init__(self, serverUrl=None, cacheTypeDescriptions=False):
@@ -92,7 +85,7 @@ class Client(BaseClient):
 
     def isConnected(self):
         """ First pass at a method to check if we're connected or not """
-        if self.__conn and self.__conn._HTTPConnection__state == 'Idle':
+        if self.conn and self.conn._HTTPConnection__state == 'Idle':
             return True
         return False
 
@@ -142,7 +135,7 @@ class Client(BaseClient):
 
     def describeSObjects(self, sObjectTypes):
         res = BaseClient.describeSObjects(self, sObjectTypes)
-        if type(res) not in (TupleType, ListType):
+        if not isinstance(res, (tuple, list)):
             res = [res]
         data = list()
         for r in res:
@@ -198,7 +191,7 @@ class Client(BaseClient):
     def create(self, sObjects):
         preparedObjects = _prepareSObjects(sObjects)
         res = BaseClient.create(self, preparedObjects)
-        if type(res) not in (TupleType, ListType):
+        if not isinstance(res, (tuple, list)):
             res = [res]
         data = list()
         for r in res:
@@ -217,7 +210,7 @@ class Client(BaseClient):
         preparedLeadConverts = _prepareSObjects(lead_converts)
         del preparedLeadConverts['fieldsToNull']
         res = BaseClient.convertLeads(self, preparedLeadConverts)
-        if type(res) not in (TupleType, ListType):
+        if not isinstance(res, (tuple, list)):
             res = [res]
         data = list()
         for resu in res:
@@ -263,7 +256,7 @@ class Client(BaseClient):
             for listitems in preparedEmails:
                 del listitems['fieldsToNull']
         res = BaseClient.sendEmail(self, preparedEmails, mass_type)
-        if type(res) not in (TupleType, ListType):
+        if not isinstance(res, (tuple, list)):
             res = [res]
         data = list()
         for resu in res:
@@ -281,7 +274,7 @@ class Client(BaseClient):
         resultSet = BaseClient.retrieve(self, fields, sObjectType, ids)
         type_data = self.describeSObjects(sObjectType)[0]
 
-        if type(resultSet) not in (TupleType, ListType):
+        if not isinstance(resultSet, (tuple, list)):
             if isnil(resultSet):
                 resultSet = list()
             else:
@@ -298,7 +291,7 @@ class Client(BaseClient):
     def update(self, sObjects):
         preparedObjects = _prepareSObjects(sObjects)
         res = BaseClient.update(self, preparedObjects)
-        if type(res) not in (TupleType, ListType):
+        if not isinstance(res, (tuple, list)):
             res = [res]
         data = list()
         for r in res:
@@ -434,7 +427,7 @@ class Client(BaseClient):
 
     def delete(self, ids):
         res = BaseClient.delete(self, ids)
-        if type(res) not in (TupleType, ListType):
+        if not isinstance(res, (tuple, list)):
             res = [res]
         data = list()
         for r in res:
@@ -452,7 +445,7 @@ class Client(BaseClient):
     def upsert(self, externalIdName, sObjects):
         preparedObjects = _prepareSObjects(sObjects)
         res = BaseClient.upsert(self, externalIdName, preparedObjects)
-        if type(res) not in (TupleType, ListType):
+        if not isinstance(res, (tuple, list)):
             res = [res]
         data = list()
         for r in res:
@@ -471,7 +464,7 @@ class Client(BaseClient):
     def getDeleted(self, sObjectType, start, end):
         res = BaseClient.getDeleted(self, sObjectType, start, end)
         res = res[_tPartnerNS.deletedRecords,]
-        if type(res) not in (TupleType, ListType):
+        if not isinstance(res, (tuple, list)):
             res = [res]
         data = list()
         for r in res:
@@ -488,7 +481,7 @@ class Client(BaseClient):
     def getUpdated(self, sObjectType, start, end):
         res = BaseClient.getUpdated(self, sObjectType, start, end)
         res = res[_tPartnerNS.ids,]
-        if type(res) not in (TupleType, ListType):
+        if not isinstance(res, (tuple, list)):
             res = [res]
         return [str(r) for r in res]
 
@@ -518,6 +511,9 @@ class Client(BaseClient):
 class Field(object):
 
     def __init__(self, **kw):
+        self.type = None
+        self.name = None
+
         for key, value in kw.items():
             setattr(self, key, value)
 
@@ -683,30 +679,21 @@ def _extractUserInfo(res):
 
 def isObject(xml):
     try:
-        if xml(_tSchemaInstanceNS.type) == 'sf:sObject':
-            return True
-        else:
-            return False
+        return xml(_tSchemaInstanceNS.type) == 'sf:sObject'
     except KeyError:
         return False
 
 
 def isQueryResult(xml):
     try:
-        if xml(_tSchemaInstanceNS.type) == 'QueryResult':
-            return True
-        else:
-            return False
+        return xml(_tSchemaInstanceNS.type) == 'QueryResult'
     except KeyError:
         return False
 
 
 def isnil(xml):
     try:
-        if xml(_tSchemaInstanceNS.nil) == 'true':
-            return True
-        else:
-            return False
+        return xml(_tSchemaInstanceNS.nil) == 'true'
     except KeyError:
         return False
 

@@ -1,19 +1,21 @@
-__version__ = '1.4'
-__author__ = "Simon Fell et al. reluctantly forked by idbentley"
-__copyright__ = "GNU GPL 2."
-
-import httplib
-import logging
-import socket
-from urlparse import urlparse
-from StringIO import StringIO
 import gzip
+import socket
+import logging
 import datetime
-import xmltramp
-from xmltramp import islst
+import http.client as httplib
+from io import StringIO
+from numbers import Real
+from urllib.parse import urlparse
+
 from xml.sax.saxutils import XMLGenerator
 from xml.sax.saxutils import quoteattr
 from xml.sax.xmlreader import AttributesNSImpl
+
+from pyforce import xmltramp
+
+__version__ = '1.4'
+__author__ = "Simon Fell et al. reluctantly forked by idbentley"
+__copyright__ = "GNU GPL 2."
 
 # global constants for namespace strings, used during serialization
 _partnerNs = "urn:partner.soap.sforce.com"
@@ -35,7 +37,7 @@ gzipRequest = True    # are we going to gzip the request ?
 gzipResponse = True   # are we going to tell teh server to gzip the response ?
 forceHttp = False     # force all connections to be HTTP, for debugging
 
-_logger = logging.getLogger('pyforce.{0}'.format(__name__))
+_logger = logging.getLogger(__name__)
 
 
 def makeConnection(scheme, host):
@@ -54,6 +56,10 @@ class Client(object):
     def __del__(self):
         if callable(getattr(self.__conn, 'close', None)):
             self.__conn.close()
+
+    @property
+    def conn(self):
+        return self.__conn
 
     # login, the serverUrl and sessionId are automatically handled, returns the
     # loginResult structure
@@ -271,18 +277,17 @@ class BeatBoxXmlGenerator(XMLGenerator):
         return self._current_context[name[0]] + ":" + name[1]
 
     def startElementNS(self, name, qname, attrs):
-        self._write(unicode('<' + self.makeName(name)))
+        self._write('<' + self.makeName(name))
 
         for pair in self._undeclared_ns_maps:
-            self._write(unicode(' xmlns:%s="%s"' % pair))
+            self._write(' xmlns:%s="%s"' % pair)
         self._undeclared_ns_maps = []
 
         for (name, value) in attrs.items():
-            self._write(unicode(' %s=%s' % (
+            self._write(' %s=%s' % (
                 self.makeName(name),
                 quoteattr(value)))
-            )
-        self._write(unicode('>'))
+        self._write('>')
 
 
 # General purpose xml writer.
@@ -316,7 +321,7 @@ class XmlWriter(object):
     # i.e. If a list, then it encodes each element, if a dict, it writes an
     # embedded element.
     def writeElement(self, namespace, name, value, attrs=_noAttrs):
-        if islst(value):
+        if xmltramp.islst(value):
             for v in value:
                 self.writeElement(namespace, name, v, attrs)
         elif isinstance(value, dict):
@@ -343,13 +348,13 @@ class XmlWriter(object):
         # todo base64 ?
         if isinstance(s, datetime.datetime) or isinstance(s, datetime.date):
             s = s.isoformat()
-        elif isinstance(s, (int, float, long)):
+        elif isinstance(s, Real):
             s = str(s)
         self.xg.characters(s)
 
     def endDocument(self):
         self.xg.endDocument()
-        if (self.__gzip != None):
+        if self.__gzip is not None:
             self.__gzip.close()
         return self.__buf.getvalue()
 
@@ -518,7 +523,7 @@ class AuthenticatedRequest(SoapEnvelope):
         s.endElement()
 
     def writeSObjects(self, s, sObjects, elemName="sObjects"):
-        if islst(sObjects):
+        if xmltramp.islst(sObjects):
             for o in sObjects:
                 self.writeSObjects(s, o, elemName)
         else:
@@ -662,7 +667,8 @@ class ConvertLeadsRequest(AuthenticatedRequest):
 class SendEmailRequest(AuthenticatedRequest):
     def __init__(self, serverUrl, sessionId, emails,
                  massType="SingleEmailMessage"):
-        AuthenticatedRequest.__init__(self, serverUrl, sessionId, "sendEmail")
+        super(SendEmailRequest, self).__init__(
+            serverUrl, sessionId, "sendEmail")
         self.__emails = emails
         self.__massType = massType
 
@@ -677,8 +683,8 @@ class SendEmailRequest(AuthenticatedRequest):
 
 class ResetPasswordRequest(AuthenticatedRequest):
     def __init__(self, serverUrl, sessionId, userId):
-        AuthenticatedRequest.__init__(self, serverUrl, sessionId,
-                                      "resetPassword")
+        super(ResetPasswordRequest, self).__init__(
+            serverUrl, sessionId, "resetPassword")
         self.__userId = userId
 
     def writeBody(self, s):
@@ -687,8 +693,8 @@ class ResetPasswordRequest(AuthenticatedRequest):
 
 class SetPasswordRequest(AuthenticatedRequest):
     def __init__(self, serverUrl, sessionId, userId, password):
-        AuthenticatedRequest.__init__(self, serverUrl, sessionId,
-                                      "setPassword")
+        super(SetPasswordRequest, self).__init__(
+            serverUrl, sessionId, "setPassword")
         self.__userId = userId
         self.__password = password
 
@@ -699,8 +705,8 @@ class SetPasswordRequest(AuthenticatedRequest):
 
 class DescribeSObjectsRequest(AuthenticatedRequest):
     def __init__(self, serverUrl, sessionId, sObjectTypes):
-        AuthenticatedRequest.__init__(self, serverUrl, sessionId,
-                                      "describeSObjects")
+        super(DescribeSObjectsRequest, self).__init__(
+            serverUrl, sessionId, sObjectTypes)
         self.__sObjectTypes = sObjectTypes
 
     def writeBody(self, s):
@@ -709,8 +715,8 @@ class DescribeSObjectsRequest(AuthenticatedRequest):
 
 class DescribeLayoutRequest(AuthenticatedRequest):
     def __init__(self, serverUrl, sessionId, sObjectType):
-        AuthenticatedRequest.__init__(self, serverUrl, sessionId,
-                                      "describeLayout")
+        super(DescribeLayoutRequest, self).__init__(
+            serverUrl, sessionId, "describeLayout")
         self.__sObjectType = sObjectType
 
     def writeBody(self, s):
