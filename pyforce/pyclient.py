@@ -3,6 +3,7 @@ import copy
 import logging
 from functools import reduce
 
+from pyforce.common import bool_
 from pyforce.marshall import marshall
 from pyforce.xmlclient import _tPartnerNS, _tSObjectNS, _tSchemaInstanceNS
 from pyforce.xmlclient import Client as BaseClient
@@ -566,10 +567,6 @@ def _prepareSObjects(sObjects):
         for listitems in sObjectsCopy:
             _doPrep(listitems)
     return sObjectsCopy
-
-
-def bool_(val):
-    return str(val) == 'true'
 
 
 def _extractFieldInfo(fdata):

@@ -2,8 +2,8 @@ import re
 import logging
 import datetime
 
+from pyforce.common import bool_
 from pyforce.xmlclient import _tSObjectNS
-from pyforce.pyforce import bool_
 
 logger = logging.getLogger(__name__)
 

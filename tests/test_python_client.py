@@ -6,7 +6,7 @@ import sfconfig
 
 import pyforce
 from pyforce import SoapFaultError
-from pyforce.pyforce import _prepareSObjects
+from pyforce.pyclient import _prepareSObjects
 
 
 class TestUtils(unittest.TestCase):
