@@ -1,8 +1,8 @@
 # runs a sforce SOQL query and saves the results as a csv file.
-import sys
 import string
+import sys
+
 import pyforce
-import xmltramp
 
 sf = pyforce._tPartnerNS
 svc = pyforce.Client()

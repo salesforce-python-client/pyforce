@@ -21,16 +21,17 @@ __version__ = "1.0"
 __author__ = "Simon Fell"
 __copyright__ = "(C) 2006 Simon Fell. GNU GPL 2."
 
-import sys
-import pyforce
+import base64
 import cgi
 import cgitb
-from xml.sax.xmlreader import AttributesNSImpl
 import datetime
-from urlparse import urlparse
 import os
-import base64
 import string
+from xml.sax.xmlreader import AttributesNSImpl
+
+from urlparse import urlparse
+
+import pyforce
 
 cgitb.enable()
 sf = pyforce._tPartnerNS
@@ -78,7 +79,8 @@ def soql2atom(loginResult, soql, title):
     x.startElement(atom_ns, "link", rel)
     x.endElement()
     x.writeStringElement(atom_ns, "updated", datetime.datetime.utcnow().isoformat() +"Z")
-    x.writeStringElement(atom_ns, "id", thisUrl + "&userid=" + str(loginResult[pyforce._tPartnerNS.userId]))
+    x.writeStringElement(atom_ns, "id", thisUrl + "&userid=" + str(loginResult[
+                                                                       pyforce._tPartnerNS.userId]))
     x.characters("\n")
     type = AttributesNSImpl({(None, u"type") : "html"}, {(None, u"type") : u"type" })
     for row in qr[sf.records,]:

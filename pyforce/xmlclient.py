@@ -1,12 +1,11 @@
-import gzip
-import socket
-import logging
 import datetime
+import gzip
 import http.client as httplib
+import logging
+import socket
 from io import StringIO
 from numbers import Real
 from urllib.parse import urlparse
-
 from xml.sax.saxutils import XMLGenerator
 from xml.sax.saxutils import quoteattr
 from xml.sax.xmlreader import AttributesNSImpl

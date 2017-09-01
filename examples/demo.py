@@ -1,9 +1,9 @@
 # demonstration of using the BeatBox library to call the sforce API
 
-import sys
-import pyforce
-import xmltramp
 import datetime
+import sys
+
+import pyforce
 
 sf = pyforce._tPartnerNS
 svc = pyforce.Client()
@@ -119,7 +119,8 @@ class BeatBoxDemo(object):
         accounts = svc.retrieve("id, name", "Account", self.__theIds)
         for acc in accounts:
             if len(acc._dir) > 0:
-                print str(acc[pyforce._tSObjectNS.Id]) + " : " + str(acc[pyforce._tSObjectNS.Name])
+                print str(acc[pyforce._tSObjectNS.Id]) + " : " + str(acc[
+                                                                         pyforce._tSObjectNS.Name])
             else:
                 print "<null>"
 

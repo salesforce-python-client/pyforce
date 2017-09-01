@@ -1,12 +1,13 @@
-from types import DictType, StringTypes, IntType, ListType, TupleType
-import unittest
 import datetime
+import unittest
+from types import DictType, StringTypes, IntType, ListType, TupleType
 
 import sfconfig
-import pyforce
 
+import pyforce
 from pyforce import SoapFaultError
 from pyforce.pyforce import _prepareSObjects
+
 
 class TestUtils(unittest.TestCase):
 

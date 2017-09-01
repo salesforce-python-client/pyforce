@@ -1,13 +1,12 @@
-from types import DictType, StringTypes, IntType, ListType, TupleType
+import datetime
 import gc
 import unittest
-import datetime
 from time import time
+from types import ListType, TupleType
 
 import sfconfig
-import pyforce
 
-from pyforce import SoapFaultError
+import pyforce
 
 BENCHMARK_REPS = 1
 def benchmark(func):

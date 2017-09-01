@@ -1,7 +1,10 @@
-import unittest
-import pyforce
-import sfconfig
 import datetime
+import unittest
+
+import sfconfig
+
+import pyforce
+
 partnerns = pyforce._tPartnerNS
 svc = pyforce.XMLClient()
 
