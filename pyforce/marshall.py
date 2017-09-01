@@ -51,7 +51,7 @@ def textMarshaller(fieldname, xml, ns):
     node = xml[getattr(ns, fieldname)]
     text = ''
     for x in node._dir:
-        text += unicode(x)
+        text += x
     return text.encode('utf-8')
 
 register(texttypes, textMarshaller)
