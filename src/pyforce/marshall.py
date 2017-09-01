@@ -3,7 +3,7 @@ import logging
 import datetime
 
 from pyforce.xmlclient import _tSObjectNS
-from pyforce.pyforce import _bool
+from pyforce.pyforce import bool_
 
 logger = logging.getLogger(__name__)
 
@@ -67,7 +67,7 @@ register(multitypes, multiMarshaller)
 
 
 def booleanMarshaller(fieldname, xml, ns):
-    return _bool(xml[getattr(ns, fieldname)])
+    return bool_(xml[getattr(ns, fieldname)])
 
 register('boolean', booleanMarshaller)
 
