@@ -1,4 +1,7 @@
 # runs a sforce SOQL query and saves the results as a csv file.
+from __future__ import absolute_import
+from __future__ import unicode_literals
+
 import string
 import sys
 
@@ -7,22 +10,28 @@ import pyforce
 sf = pyforce._tPartnerNS
 svc = pyforce.Client()
 
+
 def buildSoql(sobjectName):
     dr = svc.describeSObjects(sobjectName)
     soql = ""
-    for f in dr[sf.fields,]:
-        if len(soql) > 0: soql += ','
+    for f in dr[sf.fields, ]:
+        if len(soql) > 0:
+            soql += ','
         soql += str(f[sf.name])
     return "select " + soql + " from " + sobjectName
+
 
 def printColumnHeaders(queryResult):
     needsComma = 0
     # note that we offset 2 into the records child collection to skip the type and base sObject id elements
     for col in queryResult[sf.records][2:]:
-        if needsComma: print ',',
-        else: needsComma = 1
+        if needsComma:
+            print ',',
+        else:
+            needsComma = 1
         print col._name[1],
     print
+
 
 def export(username, password, objectOrSoql):
     svc.login(username, password)
@@ -34,16 +43,22 @@ def export(username, password, objectOrSoql):
     qr = svc.query(soql)
     printHeaders = 1
     while True:
-        if printHeaders: printColumnHeaders(qr); printHeaders = 0
-        for row in qr[sf.records,]:
+        if printHeaders:
+            printColumnHeaders(qr)
+            printHeaders = 0
+        for row in qr[sf.records, ]:
             needsComma = False
             for col in row[2:]:
-                if needsComma: print ',',
-                else: needsComma = True
+                if needsComma:
+                    print ',',
+                else:
+                    needsComma = True
                 print str(col),
             print
-        if str(qr[sf.done]) == 'true': break
+        if str(qr[sf.done]) == 'true':
+            break
         qr = svc.queryMore(str(qr[sf.queryLocator]))
+
 
 if __name__ == "__main__":
 

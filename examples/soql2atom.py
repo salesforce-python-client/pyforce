@@ -1,5 +1,4 @@
 #!/usr/bin/python
-
 """soql2atom: a `pyforce` demo that generates an atom 1.0 formatted feed of any SOQL query (adapted from Simon Fell's pyforce example)
 
    The fields Id, SystemModStamp and CreatedDate are automatically added to the SOQL if needed.
@@ -16,6 +15,8 @@
 
    I have this in a .htaccess file in the same directory as soql2atom.py etc.
 """
+from __future__ import absolute_import
+from __future__ import unicode_literals
 
 __version__ = "1.0"
 __author__ = "Simon Fell"
@@ -38,15 +39,20 @@ sf = pyforce._tPartnerNS
 svc = pyforce.Client()
 _noAttrs = pyforce._noAttrs
 
+
 def addRequiredFieldsToSoql(soql):
     findPos = string.find(string.lower(soql), "from")
     selectList = []
     for f in string.lower(soql)[:findPos].split(","):
         selectList.append(string.strip(f))
-    if not "id" in selectList: selectList.append("Id")
-    if not "systemmodstamp" in selectList: selectList.append("systemModStamp")
-    if not "createddate" in selectList: selectList.append("createdDate")
-    return string.join(selectList, ", ") + soql[findPos-1:]
+    if not "id" in selectList:
+        selectList.append("Id")
+    if not "systemmodstamp" in selectList:
+        selectList.append("systemModStamp")
+    if not "createddate" in selectList:
+        selectList.append("createdDate")
+    return string.join(selectList, ", ") + soql[findPos - 1:]
+
 
 def soql2atom(loginResult, soql, title):
     soqlWithFields = addRequiredFieldsToSoql(soql)
@@ -62,7 +68,8 @@ def soql2atom(loginResult, soql, title):
 
     print "content-type: application/atom+xml"
     doGzip = os.environ.has_key("HTTP_ACCEPT_ENCODING") and "gzip" in string.lower(os.environ["HTTP_ACCEPT_ENCODING"]).split(',')
-    if (doGzip): print "content-encoding: gzip"
+    if (doGzip):
+        print "content-encoding: gzip"
     print ""
     x = pyforce.XmlWriter(doGzip)
     x.startPrefixMapping("a", atom_ns)
@@ -74,16 +81,16 @@ def soql2atom(loginResult, soql, title):
     x.writeStringElement(atom_ns, "name", str(userInfo.userFullName))
     x.endElement()
     x.characters("\n")
-    rel = AttributesNSImpl( {(None, "rel"): "self", (None, "href") : thisUrl},
-                            {(None, "rel"): "rel",  (None, "href"): "href"})
+    rel = AttributesNSImpl({(None, "rel"): "self", (None, "href"): thisUrl},
+                           {(None, "rel"): "rel", (None, "href"): "href"})
     x.startElement(atom_ns, "link", rel)
     x.endElement()
-    x.writeStringElement(atom_ns, "updated", datetime.datetime.utcnow().isoformat() +"Z")
+    x.writeStringElement(atom_ns, "updated", datetime.datetime.utcnow().isoformat() + "Z")
     x.writeStringElement(atom_ns, "id", thisUrl + "&userid=" + str(loginResult[
-                                                                       pyforce._tPartnerNS.userId]))
+        pyforce._tPartnerNS.userId]))
     x.characters("\n")
-    type = AttributesNSImpl({(None, u"type") : "html"}, {(None, u"type") : u"type" })
-    for row in qr[sf.records,]:
+    type = AttributesNSImpl({(None, u"type"): "html"}, {(None, u"type"): u"type"})
+    for row in qr[sf.records, ]:
         x.startElement(atom_ns, "entry")
         desc = ""
         x.writeStringElement(atom_ns, "title", str(row[2]))
@@ -100,17 +107,19 @@ def soql2atom(loginResult, soql, title):
                 x.writeStringElement(ent_ns, col._name[1], str(col))
         x.startElement(atom_ns, "content", type)
         x.characters(desc)
-        x.endElement() # content
+        x.endElement()  # content
         x.characters("\n")
-        x.endElement() # entry
-    x.endElement() # feed
+        x.endElement()  # entry
+    x.endElement()  # feed
     print x.endDocument()
 
+
 def writeLink(x, namespace, localname, rel, type, href):
-    rel = AttributesNSImpl( {(None, "rel"): rel,   (None, "href"): href,   (None, "type"): type },
-                            {(None, "rel"): "rel", (None, "href"): "href", (None, "type"): "type"})
+    rel = AttributesNSImpl({(None, "rel"): rel, (None, "href"): href, (None, "type"): type},
+                           {(None, "rel"): "rel", (None, "href"): "href", (None, "type"): "type"})
     x.startElement(namespace, localname, rel)
     x.endElement()
+
 
 def authenticationRequired(message="Unauthorized"):
     print "status: 401 Unauthorized"
@@ -119,13 +128,15 @@ def authenticationRequired(message="Unauthorized"):
     print ""
     print message
 
+
 if not os.environ.has_key('X_HTTP_AUTHORIZATION') or os.environ['X_HTTP_AUTHORIZATION'] == '':
     authenticationRequired()
 else:
     auth = os.environ['X_HTTP_AUTHORIZATION']
     (username, password) = base64.decodestring(auth.split(" ")[1]).split(':')
     form = cgi.FieldStorage()
-    if not form.has_key('soql'): raise Exception("Must provide the SOQL query to run via the soql queryString parameter")
+    if not form.has_key('soql'):
+        raise Exception("Must provide the SOQL query to run via the soql queryString parameter")
     soql = form.getvalue("soql")
     title = "SOQL2ATOM : " + soql
     if form.has_key("title"):
@@ -138,4 +149,3 @@ else:
             authenticationRequired(sfe.faultString)
         else:
             raise
-

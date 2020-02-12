@@ -1,0 +1,9 @@
+-r ./requirements.txt
+coverage
+flake8
+mock
+pre-commit>=1.7.0
+pytest
+tox
+# debugging
+ipdb
