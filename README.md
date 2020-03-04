@@ -4,14 +4,14 @@ Introduction
 ============
 
 This is a reluctant fork of the beatbox project originally authored by Simon
-Fell, (his version locked at 0.92) later drastically changed by these guys
+Fell, (their version locked at 0.92) later drastically changed by these folks
 https://code.google.com/p/salesforce-beatbox/ (versioned at 20.0).
 
 Renamed to `pyforce` to avoid confusion related to the fractured community
 version. (https://github.com/superfell/Beatbox/issues/6) Long story short,
 the python client in the fork at version 20.0 is exceptionally useful, so
 going back to 0.92 would be a mistake, however the beatbox version at 20.0 is
-also no longer maintained (judging by the issues).  `pyforce` builds off of
+also no longer maintained (judging by the issues). `pyforce` builds off
 the version available there, integrating bug fixes, and new features.
 
 This module contains 2 versions of the Salesforce.com client:
@@ -39,8 +39,7 @@ this time:
  * describeDataCategoryGroups
  * describeDataCategoryGroupStructures
 
-`pyforce` supports python 2.x for values of x >=6.  It probably works in 2.4,
-but not officially supported.
+`pyforce` supports python 2.x for values of x >=7 as well as Python 3.x.
 
 Basic Usage Examples
 ====================
@@ -50,7 +49,7 @@ Instantiate a Python Salesforce.com client:
     >>> svc.login('username', 'passwordTOKEN')
 
 (Note that interacting with Salesforce.com via the API requires the use of a
-'security token' which must be appended to the password.  See sfdc docs for
+'security token' which must be appended to the password. See sfdc docs for
 details)
 
 The pyforce client allows you to query with sfdc SOQL.
@@ -134,22 +133,17 @@ how to use the python client see the tests directory.
 Some of these other products that were built on top of beatbox can also provide
 example of `pyforce` use, though this project may diverge from the beatbox api.
 
-  * `Salesforce Base Connector`_
-  * `Salesforce PFG Adapter`_
-  * `Salesforce Auth Plugin`_
-  * `RSVP for Salesforce`_
-
-.. _`Salesforce Base Connector`: http://plone.org/products/salesforcebaseconnector
-.. _`Salesforce PFG Adapter`: http://plone.org/products/salesforcepfgadapter
-.. _`Salesforce Auth Plugin`: http://plone.org/products/salesforceauthplugin
-.. _`RSVP for Salesforce`: http://plone.org/products/collective.salesforce.rsvp
+  *  [`Salesforce Base Connector`](http://plone.org/products/salesforcebaseconnector)
+  *  [`Salesforce PFG Adapter`](http://plone.org/products/salesforcepfgadapter)
+  *  [`Salesforce Auth Plugin`](http://plone.org/products/salesforceauthplugin)
+  *  [`RSVP for Salesforce`](http://plone.org/products/collective.salesforce.rsvp)
 
 
 Alternatives
 ============
 
 David Lanstein has created a `Python Salesforce Toolkit` that is based on the
-`suds` SOAP library.  That project has not seen any commit since June 2011, so
+`suds` SOAP library. That project has not seen any commit since June 2011, so
 it is assumed to be abandoned.
 
 .. `Python Salesforce Toolkit`: http://code.google.com/p/salesforce-python-toolkit/
@@ -158,14 +152,14 @@ Running Tests
 =============
 
 At the fork time, all tests are integration tests that require access to a
-Salesforce environment.  It is my intent to change these tests to be stub
+Salesforce environment. It is my intent to change these tests to be stub
 based unit tests.
 
 From the beatbox documentation:
 
 First, we need to add some custom fields to the Contacts object in your Salesforce instance:
 
- * Login to your Salesforce.com instance
+ *Login to your Salesforce.com instance
  * Browse to Setup --> Customize --> Contacts --> Fields --> "New" button
  * Add a Picklist (multi-select) labeled "Favorite Fruit", then add
     * Apple
@@ -175,16 +169,10 @@ First, we need to add some custom fields to the Contacts object in your Salesfor
  * Add a Number labeled "Favorite Integer", with 18 places, 0 decimal places
  * Add a Number labeled "Favorite Float", with 13 places, 5 decimal places
 
-Create a sfconfig file in your python path with the following format::
+Export environment variables with your Salesforce credentials:
 
-    USERNAME='your salesforce username'
-    PASSWORD='your salesforce passwordTOKEN'
-
-where TOKEN is your Salesforce API login token.
-
-Add './src' to your PYTHONPATH
+    SF_USERNAME, SF_PASSWORD, SF_SECTOKEN
 
 Run the tests::
 
-    python src/pyforce/tests/test_xmlclient.py
-    python src/pyforce/tests/test_pythonClient.py
+    make test

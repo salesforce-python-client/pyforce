@@ -26,11 +26,10 @@ def printColumnHeaders(queryResult):
     # note that we offset 2 into the records child collection to skip the type and base sObject id elements
     for col in queryResult[sf.records][2:]:
         if needsComma:
-            print ',',
+            print(',',)
         else:
             needsComma = 1
-        print col._name[1],
-    print
+        print(col._name[1],)
 
 
 def export(username, password, objectOrSoql):
@@ -50,10 +49,10 @@ def export(username, password, objectOrSoql):
             needsComma = False
             for col in row[2:]:
                 if needsComma:
-                    print ',',
+                    print(',',)
                 else:
                     needsComma = True
-                print str(col),
+                print(str(col),)
             print
         if str(qr[sf.done]) == 'true':
             break
@@ -63,6 +62,6 @@ def export(username, password, objectOrSoql):
 if __name__ == "__main__":
 
     if len(sys.argv) != 4:
-        print "usage is export.py <username> <password> [<sobjectName> || <soqlQuery>]"
+        print("usage is export.py <username> <password> [<sobjectName> || <soqlQuery>]")
     else:
         export(sys.argv[1], sys.argv[2], sys.argv[3])

@@ -5,10 +5,10 @@ import datetime
 import logging
 import re
 
+from six import text_type
+
 from pyforce.common import bool_
 from pyforce.xmlclient import _tSObjectNS
-
-from six import text_type
 
 logger = logging.getLogger(__name__)
 

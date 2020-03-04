@@ -20,6 +20,14 @@ test-py2:
 test-py3:
 	tox -e py3
 
+.PHONY: install-hooks
+install-hooks: $(VENV)
+	$(VENV)/bin/pre-commit install --install-hooks
+
+.PHONY: check
+check: $(VENV)
+	$(VENV)/bin/pre-commit run --all-files
+
 .PHONY: clean
 clean:
 	find . -name '*.pyc' -delete

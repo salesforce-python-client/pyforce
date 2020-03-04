@@ -14,7 +14,7 @@ from pyforce.pyclient import _prepareSObjects
 
 
 SERVER_URL = "https://test.salesforce.com/services/Soap/u/20.0"
-DELAY_RETRY = 5
+DELAY_RETRY = 10
 DELAY_SEC = 2
 
 
@@ -80,21 +80,27 @@ class TestUtils(unittest.TestCase):
                 data[k], contact[k])
 
     def testSetIntegerField(self):
-        #Passes when you feed it floats, even if salesforce field is defined for 0 decimal places.  Lack of data validation in SF?
+        # Passes when you feed it floats, even if salesforce field is defined
+        # for 0 decimal places.  Lack of data validation in SF?
         svc = self.svc
         testField = 'Favorite_Integer__c'
-        data = dict(type='Contact',
-                    LastName='Doe',
-                    FirstName='John',
-                    Favorite_Integer__c=-25
-                    )
+        data = dict(
+            type='Contact',
+            LastName='Doe',
+            FirstName='John',
+            Favorite_Integer__c=-25,
+        )
         res = svc.create([data])
         self.assertTrue(type(res) in (list, tuple))
         self.assertTrue(len(res) == 1)
         self.assertTrue(res[0]['success'])
         id = res[0]['id']
         self._todelete.append(id)
-        contacts = svc.retrieve('LastName, FirstName, Favorite_Integer__c', 'Contact', [id])
+        contacts = svc.retrieve(
+            'LastName, FirstName, Favorite_Integer__c',
+            'Contact',
+            [id],
+        )
         self.assertEqual(len(contacts), 1)
         contact = contacts[0]
         self.assertEqual(data[testField], contact[testField])
@@ -122,27 +128,37 @@ class TestUtils(unittest.TestCase):
     def testCreatePickListMultiple(self):
         svc = self.svc
 
-        data = dict(type='Contact',
-                    LastName='Doe',
-                    FirstName='John',
-                    Phone='123-456-7890',
-                    Email='john@doe.com',
-                    Birthdate=datetime.date(1970, 1, 4),
-                    Favorite_Fruit__c=["Apple", "Orange", "Pear"]
-                    )
+        data = dict(
+            type='Contact',
+            LastName='Doe',
+            FirstName='John',
+            Phone='123-456-7890',
+            Email='john@doe.com',
+            Birthdate=datetime.date(1970, 1, 4),
+            Favorite_Fruit__c=["Apple", "Orange", "Pear"],
+        )
         res = svc.create([data])
         self.assertTrue(type(res) in (list, tuple))
         self.assertTrue(len(res) == 1)
         self.assertTrue(res[0]['success'])
         id = res[0]['id']
         self._todelete.append(id)
-        contacts = svc.retrieve('LastName, FirstName, Phone, Email, Birthdate, \
-             Favorite_Fruit__c', 'Contact', [id])
+        contacts = svc.retrieve(
+            'LastName, FirstName, Phone, Email, Birthdate, Favorite_Fruit__c',
+            'Contact',
+            [id],
+        )
         self.assertEqual(len(contacts), 1)
         contact = contacts[0]
-        for k in ['LastName', 'FirstName', 'Phone', 'Email', 'Birthdate', 'Favorite_Fruit__c']:
-            self.assertEqual(
-                data[k], contact[k])
+        for k in [
+            'LastName',
+            'FirstName',
+            'Phone',
+            'Email',
+            'Birthdate',
+            'Favorite_Fruit__c',
+        ]:
+            self.assertEqual(data[k], contact[k])
 
     #def testCreatePickListMultipleWithInvalid(self):
         #""" This fails, and I guess it should(?)
@@ -175,24 +191,26 @@ class TestUtils(unittest.TestCase):
 
     def testFailedCreate(self):
         svc = self.svc
-        data = dict(type='Contact',
-                    LastName='Doe',
-                    FirstName='John',
-                    Phone='123-456-7890',
-                    Email='john@doe.com',
-                    Birthdate='foo'
-                    )
+        data = dict(
+            type='Contact',
+            LastName='Doe',
+            FirstName='John',
+            Phone='123-456-7890',
+            Email='john@doe.com',
+            Birthdate='foo',
+        )
         self.assertRaises(SoapFaultError, svc.create, data)
 
     def testRetrieve(self):
         svc = self.svc
-        data = dict(type='Contact',
-                    LastName='Doe',
-                    FirstName='John',
-                    Phone='123-456-7890',
-                    Email='john@doe.com',
-                    Birthdate=datetime.date(1970, 1, 4)
-                    )
+        data = dict(
+            type='Contact',
+            LastName='Doe',
+            FirstName='John',
+            Phone='123-456-7890',
+            Email='john@doe.com',
+            Birthdate=datetime.date(1970, 1, 4),
+        )
         res = svc.create([data])
         id = res[0]['id']
         self._todelete.append(id)

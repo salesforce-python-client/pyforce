@@ -3,8 +3,10 @@ from __future__ import unicode_literals
 
 import copy
 import logging
-import re
 from functools import reduce
+
+from six import string_types
+from six import text_type
 
 from pyforce.common import bool_
 from pyforce.marshall import marshall
@@ -14,15 +16,10 @@ from pyforce.xmlclient import _tSObjectNS
 from pyforce.xmlclient import Client as BaseClient
 from pyforce.xmltramp import Namespace
 
-from six import string_types
-from six import text_type
-
-
-_tSchemaNS = Namespace('http://www.w3.org/2001/XMLSchema')
 
 DEFAULT_FIELD_TYPE = "string"
-querytyperegx = re.compile('(?:from|FROM) (\S+)')
 
+_tSchemaNS = Namespace('http://www.w3.org/2001/XMLSchema')
 _logger = logging.getLogger("pyforce.{0}".format(__name__))
 
 
@@ -47,7 +44,6 @@ class QueryRecordSet(list):
         return self
 
     def __getitem__(self, n):
-        # Might need to override __contains__ as well to avoid first testing by __iter__
         # If string, we can try to return a result attribute
         if isinstance(n, string_types):
             try:
@@ -250,8 +246,10 @@ class Client(BaseClient):
             d['id'] = text_type(r[_tPartnerNS.id])
             d['success'] = success = bool_(r[_tPartnerNS.success])
             if not success:
-                d['errors'] = [_extractError(e)
-                               for e in r[_tPartnerNS.errors, ]]
+                d['errors'] = [
+                    _extractError(e)
+                    for e in r[_tPartnerNS.errors, ]
+                ]
             else:
                 d['errors'] = list()
         return data
@@ -268,8 +266,10 @@ class Client(BaseClient):
             data.append(d)
             d['success'] = success = bool_(resu[_tPartnerNS.success])
             if not success:
-                d['errors'] = [_extractError(e)
-                               for e in resu[_tPartnerNS.errors, ]]
+                d['errors'] = [
+                    _extractError(e)
+                    for e in resu[_tPartnerNS.errors, ]
+                ]
             else:
                 d['errors'] = list()
                 d['account_id'] = text_type(resu[_tPartnerNS.accountId])
@@ -314,8 +314,10 @@ class Client(BaseClient):
             data.append(d)
             d['success'] = success = bool_(resu[_tPartnerNS.success])
             if not success:
-                d['errors'] = [_extractError(e)
-                               for e in resu[_tPartnerNS.errors, ]]
+                d['errors'] = [
+                    _extractError(e)
+                    for e in resu[_tPartnerNS.errors, ]
+                ]
             else:
                 d['errors'] = list()
         return data
@@ -350,8 +352,10 @@ class Client(BaseClient):
             d['id'] = text_type(r[_tPartnerNS.id])
             d['success'] = success = bool_(r[_tPartnerNS.success])
             if not success:
-                d['errors'] = [_extractError(e)
-                               for e in r[_tPartnerNS.errors, ]]
+                d['errors'] = [
+                    _extractError(e)
+                    for e in r[_tPartnerNS.errors, ]
+                ]
             else:
                 d['errors'] = list()
         return data
@@ -401,32 +405,40 @@ class Client(BaseClient):
         elif len(args) == 2:  # BBB: fields, sObjectType
             queryString = 'select %s from %s' % (args[0], args[1])
             if 'conditionalExpression' in kw:  # BBB: fields, sObjectType,
-                                               # conditionExpression as kwarg
+                # conditionExpression as kwarg
                 queryString += ' where %s' % (kw['conditionalExpression'])
         elif len(args) == 3:  # BBB: fields, sObjectType, conditionExpression
-                              # as positional arg
+            # as positional arg
             whereClause = args[2] and (' where %s' % args[2]) or ''
             queryString = 'select %s from %s%s' % (
                 args[0],
                 args[1],
-                whereClause
+                whereClause,
             )
         else:
             raise RuntimeError("Wrong number of arguments to query method.")
 
         res = BaseClient.query(self, queryString)
         # calculate the union of the sets of record types from each record
-        types = reduce(lambda a, b: a | b, [getRecordTypes(r) for r in
-                                            res[_tPartnerNS.records, ]], set())
+        types = reduce(
+            lambda a, b: a | b,
+            [
+                getRecordTypes(r)
+                for r in res[_tPartnerNS.records, ]
+            ],
+            set(),
+        )
         new_types = types - set(typeDescs.keys())
         if new_types:
             typeDescs.update(self.queryTypesDescriptions(new_types))
         data = QueryRecordSet(
-            records=[self._extractRecord(r, typeDescs) for r in
-                     res[_tPartnerNS.records, ]],
+            records=[
+                self._extractRecord(r, typeDescs)
+                for r in res[_tPartnerNS.records, ]
+            ],
             done=bool_(res[_tPartnerNS.done]),
             size=int(text_type(res[_tPartnerNS.size])),
-            queryLocator=text_type(res[_tPartnerNS.queryLocator])
+            queryLocator=text_type(res[_tPartnerNS.queryLocator]),
         )
         return data
 
@@ -456,13 +468,21 @@ class Client(BaseClient):
 
         # calculate the union of the sets of record types from each record
         if len(res):
-            types = reduce(lambda a, b: a | b, [getRecordTypes(r) for r in
-                                                res[_tPartnerNS.searchRecords]], set())
+            types = reduce(
+                lambda a, b: a | b,
+                [
+                    getRecordTypes(r)
+                    for r in res[_tPartnerNS.searchRecords]
+                ],
+                set(),
+            )
             new_types = types - set(typeDescs.keys())
             if new_types:
                 typeDescs.update(self.queryTypesDescriptions(new_types))
-            return [self._extractRecord(r, typeDescs) for r in
-                    res[_tPartnerNS.searchRecords]]
+            return [
+                self._extractRecord(r, typeDescs)
+                for r in res[_tPartnerNS.searchRecords]
+            ]
         else:
             return []
 
@@ -477,8 +497,10 @@ class Client(BaseClient):
             d['id'] = text_type(r[_tPartnerNS.id])
             d['success'] = success = bool_(r[_tPartnerNS.success])
             if not success:
-                d['errors'] = [_extractError(e)
-                               for e in r[_tPartnerNS.errors, ]]
+                d['errors'] = [
+                    _extractError(e)
+                    for e in r[_tPartnerNS.errors, ]
+                ]
             else:
                 d['errors'] = list()
         return data
@@ -513,7 +535,7 @@ class Client(BaseClient):
                 id=text_type(r[_tPartnerNS.id]),
                 deletedDate=marshall(
                     'datetime', 'deletedDate', r,
-                    ns=_tPartnerNS
+                    ns=_tPartnerNS,
                 )
             )
             data.append(d)
@@ -540,7 +562,7 @@ class Client(BaseClient):
                 label=text_type(r[_tPartnerNS.label]),
                 logoUrl=text_type(r[_tPartnerNS.logoUrl]),
                 selected=bool_(r[_tPartnerNS.selected]),
-                tabs=tabs
+                tabs=tabs,
             )
             data.append(d)
         return data
@@ -746,7 +768,14 @@ def getRecordTypes(xml):
             if isObject(field):
                 record_types.update(getRecordTypes(field))
             elif isQueryResult(field):
-                record_types.update(reduce(lambda x, y: x | y, [
-                                    getRecordTypes(r) for r in
-                                    field[_tPartnerNS.records, ]], set()))
+                record_types.update(
+                    reduce(
+                        lambda x, y: x | y,
+                        [
+                            getRecordTypes(r) for r in
+                            field[_tPartnerNS.records, ]
+                        ],
+                        set(),
+                    )
+                )
     return record_types

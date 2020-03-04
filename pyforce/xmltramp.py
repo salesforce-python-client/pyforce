@@ -9,8 +9,8 @@ from xml.sax.handler import ErrorHandler
 from xml.sax.handler import feature_namespaces
 
 import defusedxml
-from six import StringIO
 from six import ensure_str
+from six import StringIO
 from six import text_type
 
 __version__ = "2.18-pyforce"

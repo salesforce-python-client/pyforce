@@ -7,9 +7,9 @@ import os
 import unittest
 from time import time
 
-import pyforce
-
 import six
+
+import pyforce
 
 BENCHMARK_REPS = 1
 

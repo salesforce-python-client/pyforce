@@ -1,4 +1,8 @@
+from __future__ import absolute_import
+from __future__ import unicode_literals
+
 from pyforce.xmltramp import *
+
 
 def main_test():
     parse('<doc>a<baz>f<b>o</b>ob<b>a</b>r</baz>a</doc>').__repr__(1, 1) == \
@@ -44,9 +48,9 @@ def main_test():
     assert d[0]._name == "bar"
     assert len(d[:]) == len(d._dir)
     assert len(d[1:]) == len(d._dir) - 1
-    assert len(d['bar',]) == 2
-    d['bar',] = 'baz'
-    assert len(d['bar',]) == 3
+    assert len(d['bar', ]) == 2
+    d['bar', ] = 'baz'
+    assert len(d['bar', ]) == 3
     assert d['bar']._name == 'bar'
 
     d = Element('foo')
@@ -72,7 +76,7 @@ def main_test():
         'dc:creator><dc:creator>John Palfrey</dc:creator><bbc:show bbc:station='
         '"4">Buffy</bbc:show></doc>'
     )
-    assert d.__repr__(1,1) == (
+    assert d.__repr__(1, 1) == (
         '<doc xmlns="http://example.org/bar" xmlns:bbc="http://example.org/bbc"'
         ' xmlns:dc="http://purl.org/dc/elements/1.1/" version="2.71828182845904'
         '51">\n\t<author>John Polk and John Palfrey</author>\n\t<dc:creator>Joh'
@@ -86,12 +90,12 @@ def main_test():
     assert d.author._name == doc.author
     assert str(d[dc.creator]) == "John Polk"
     assert d[dc.creator]._name == dc.creator
-    assert str(d[dc.creator,][1]) == "John Palfrey"
+    assert str(d[dc.creator, ][1]) == "John Palfrey"
     d[dc.creator] = "Me!!!"
     assert str(d[dc.creator]) == "Me!!!"
-    assert len(d[dc.creator,]) == 1
-    d[dc.creator,] = "You!!!"
-    assert len(d[dc.creator,]) == 2
+    assert len(d[dc.creator, ]) == 1
+    d[dc.creator, ] = "You!!!"
+    assert len(d[dc.creator, ]) == 2
 
     assert d[bbc.show](bbc.station) == "4"
     d[bbc.show](bbc.station, "5")

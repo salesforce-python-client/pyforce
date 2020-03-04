@@ -10,8 +10,8 @@ from xml.sax.saxutils import XMLGenerator
 from xml.sax.xmlreader import AttributesNSImpl
 
 import requests
-from six import BytesIO
 from six import binary_type
+from six import BytesIO
 from six import text_type
 from six.moves.urllib.parse import urlparse
 
