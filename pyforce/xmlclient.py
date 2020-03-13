@@ -1,19 +1,25 @@
+from __future__ import absolute_import
+from __future__ import unicode_literals
+
+import datetime
+import gzip
+import logging
+from numbers import Real
+from xml.sax.saxutils import quoteattr
+from xml.sax.saxutils import XMLGenerator
+from xml.sax.xmlreader import AttributesNSImpl
+
+import requests
+from six import binary_type
+from six import BytesIO
+from six import text_type
+from six.moves.urllib.parse import urlparse
+
+from pyforce import xmltramp
+
 __version__ = '1.4'
 __author__ = "Simon Fell et al. reluctantly forked by idbentley"
 __copyright__ = "GNU GPL 2."
-
-import httplib
-import logging
-import socket
-from urlparse import urlparse
-from StringIO import StringIO
-import gzip
-import datetime
-import xmltramp
-from xmltramp import islst
-from xml.sax.saxutils import XMLGenerator
-from xml.sax.saxutils import quoteattr
-from xml.sax.xmlreader import AttributesNSImpl
 
 # global constants for namespace strings, used during serialization
 _partnerNs = "urn:partner.soap.sforce.com"
@@ -31,17 +37,11 @@ _tSoapNS = xmltramp.Namespace(_envNs)
 _tSchemaInstanceNS = xmltramp.Namespace(_schemaInstanceNs)
 
 # global config
+# TODO: Re-enable this before shipping
 gzipRequest = True    # are we going to gzip the request ?
 gzipResponse = True   # are we going to tell teh server to gzip the response ?
-forceHttp = False     # force all connections to be HTTP, for debugging
 
-_logger = logging.getLogger('pyforce.{0}'.format(__name__))
-
-
-def makeConnection(scheme, host):
-    if forceHttp or scheme.upper() == 'HTTP':
-        return httplib.HTTPConnection(host)
-    return httplib.HTTPSConnection(host)
+_logger = logging.getLogger(__name__)
 
 
 # the main sforce client proxy class
@@ -54,6 +54,10 @@ class Client(object):
     def __del__(self):
         if callable(getattr(self.__conn, 'close', None)):
             self.__conn.close()
+
+    @property
+    def conn(self):
+        return self.__conn
 
     # login, the serverUrl and sessionId are automatically handled, returns the
     # loginResult structure
@@ -70,7 +74,7 @@ class Client(object):
         self.sessionId = sessionId
         self.__serverUrl = serverUrl
         (scheme, host, path, params, query, frag) = urlparse(self.__serverUrl)
-        self.__conn = makeConnection(scheme, host)
+        self.__conn = requests.Session()
 
     def logout(self):
         return LogoutRequest(
@@ -265,24 +269,23 @@ class BeatBoxXmlGenerator(XMLGenerator):
 
     def makeName(self, name):
         if name[0] is None:
-            #if the name was not namespace-scoped, use the qualified part
+            # if the name was not namespace-scoped, use the qualified part
             return name[1]
         # else try to restore the original prefix from the namespace
         return self._current_context[name[0]] + ":" + name[1]
 
     def startElementNS(self, name, qname, attrs):
-        self._write(unicode('<' + self.makeName(name)))
+        self._write('<' + self.makeName(name))
 
         for pair in self._undeclared_ns_maps:
-            self._write(unicode(' xmlns:%s="%s"' % pair))
+            self._write(' xmlns:%s="%s"' % pair)
         self._undeclared_ns_maps = []
 
         for (name, value) in attrs.items():
-            self._write(unicode(' %s=%s' % (
+            self._write(' %s=%s' % (
                 self.makeName(name),
                 quoteattr(value)))
-            )
-        self._write(unicode('>'))
+        self._write('>')
 
 
 # General purpose xml writer.
@@ -290,7 +293,7 @@ class BeatBoxXmlGenerator(XMLGenerator):
 # TODO: What does it do, beyond XMLGenerator?
 class XmlWriter(object):
     def __init__(self, doGzip):
-        self.__buf = StringIO("")
+        self.__buf = BytesIO(binary_type(b''))
         if doGzip:
             self.__gzip = gzip.GzipFile(mode='wb', fileobj=self.__buf)
             stm = self.__gzip
@@ -316,7 +319,7 @@ class XmlWriter(object):
     # i.e. If a list, then it encodes each element, if a dict, it writes an
     # embedded element.
     def writeElement(self, namespace, name, value, attrs=_noAttrs):
-        if islst(value):
+        if xmltramp.islst(value):
             for v in value:
                 self.writeElement(namespace, name, v, attrs)
         elif isinstance(value, dict):
@@ -343,13 +346,14 @@ class XmlWriter(object):
         # todo base64 ?
         if isinstance(s, datetime.datetime) or isinstance(s, datetime.date):
             s = s.isoformat()
-        elif isinstance(s, (int, float, long)):
+        elif isinstance(s, Real):
             s = str(s)
         self.xg.characters(s)
 
     def endDocument(self):
+        # from ipdb import set_trace; set_trace()
         self.xg.endDocument()
-        if (self.__gzip != None):
+        if self.__gzip is not None:
             self.__gzip.close()
         return self.__buf.getvalue()
 
@@ -370,6 +374,7 @@ class SessionTimeoutError(Exception):
     of a new connection, we create a new exception type, so these can
     be identified and handled seperately from SoapFaultErrors
     """
+
     def __init__(self, faultCode, faultString):
         self.faultCode = faultCode
         self.faultString = faultString
@@ -400,7 +405,7 @@ class SoapWriter(XmlWriter):
 # processing for a single soap request / response
 class SoapEnvelope(object):
     def __init__(self, serverUrl, operationName,
-                 clientId="BeatBox/" + __version__):
+                 clientId="Pyforce/" + __version__):
         self.serverUrl = serverUrl
         self.operationName = operationName
         self.clientId = clientId
@@ -446,36 +451,35 @@ class SoapEnvelope(object):
             headers['accept-encoding'] = 'gzip'
         if gzipRequest:
             headers['content-encoding'] = 'gzip'
-        close = False
-        (scheme, host, path, params, query, frag) = urlparse(self.serverUrl)
         max_attempts = 3
         response = None
         attempt = 1
-        while not response and attempt <= max_attempts:
+        if conn is None:
+            # Use a stateless connection
+            conn = requests
+        conn_error = None
+        while response is None and attempt <= max_attempts:
             try:
-                if conn is None:
-                    conn = makeConnection(scheme, host)
-                    close = True
-                conn.request("POST", path, self.makeEnvelope(), headers)
-                response = conn.getresponse()
-                rawResponse = response.read()
-            except (httplib.HTTPException, socket.error):
-                if conn is not None:
-                    conn.close()
-                    conn = None
-                    response = None
+                envelope = self.makeEnvelope()
+                # TODO: Can we just use the URL here?
+                # response = conn.post(self.serverUrl, data=binary_type(envelope), headers=headers)
+                response = conn.post(
+                    self.serverUrl,
+                    data=envelope,
+                    headers=headers,
+                )
+            except requests.exceptions.ConnectionError as ex:
                 attempt += 1
-        if not response:
+                conn_error = ex
+        if response is None:
+            if conn_error:
+                raise conn_error
             raise RuntimeError('No response from Salesforce')
-
-        if response.getheader('content-encoding', '') == 'gzip':
-            rawResponse = gzip.GzipFile(fileobj=StringIO(rawResponse)).read()
-        if close:
-            conn.close()
-        tramp = xmltramp.parse(rawResponse)
+        tramp = xmltramp.parse(response.text)
         try:
-            faultString = str(tramp[_tSoapNS.Body][_tSoapNS.Fault].faultstring)
-            faultCode = str(
+            faultString = text_type(
+                tramp[_tSoapNS.Body][_tSoapNS.Fault].faultstring)
+            faultCode = text_type(
                 tramp[_tSoapNS.Body][_tSoapNS.Fault].faultcode).split(':')[-1]
             if faultCode == 'INVALID_SESSION_ID':
                 raise SessionTimeoutError(faultCode, faultString)
@@ -518,7 +522,7 @@ class AuthenticatedRequest(SoapEnvelope):
         s.endElement()
 
     def writeSObjects(self, s, sObjects, elemName="sObjects"):
-        if islst(sObjects):
+        if xmltramp.islst(sObjects):
             for o in sObjects:
                 self.writeSObjects(s, o, elemName)
         else:
@@ -662,7 +666,8 @@ class ConvertLeadsRequest(AuthenticatedRequest):
 class SendEmailRequest(AuthenticatedRequest):
     def __init__(self, serverUrl, sessionId, emails,
                  massType="SingleEmailMessage"):
-        AuthenticatedRequest.__init__(self, serverUrl, sessionId, "sendEmail")
+        super(SendEmailRequest, self).__init__(
+            serverUrl, sessionId, "sendEmail")
         self.__emails = emails
         self.__massType = massType
 
@@ -677,8 +682,8 @@ class SendEmailRequest(AuthenticatedRequest):
 
 class ResetPasswordRequest(AuthenticatedRequest):
     def __init__(self, serverUrl, sessionId, userId):
-        AuthenticatedRequest.__init__(self, serverUrl, sessionId,
-                                      "resetPassword")
+        super(ResetPasswordRequest, self).__init__(
+            serverUrl, sessionId, "resetPassword")
         self.__userId = userId
 
     def writeBody(self, s):
@@ -687,8 +692,8 @@ class ResetPasswordRequest(AuthenticatedRequest):
 
 class SetPasswordRequest(AuthenticatedRequest):
     def __init__(self, serverUrl, sessionId, userId, password):
-        AuthenticatedRequest.__init__(self, serverUrl, sessionId,
-                                      "setPassword")
+        super(SetPasswordRequest, self).__init__(
+            serverUrl, sessionId, "setPassword")
         self.__userId = userId
         self.__password = password
 
@@ -699,8 +704,8 @@ class SetPasswordRequest(AuthenticatedRequest):
 
 class DescribeSObjectsRequest(AuthenticatedRequest):
     def __init__(self, serverUrl, sessionId, sObjectTypes):
-        AuthenticatedRequest.__init__(self, serverUrl, sessionId,
-                                      "describeSObjects")
+        super(DescribeSObjectsRequest, self).__init__(
+            serverUrl, sessionId, "describeSObjects")
         self.__sObjectTypes = sObjectTypes
 
     def writeBody(self, s):
@@ -709,8 +714,8 @@ class DescribeSObjectsRequest(AuthenticatedRequest):
 
 class DescribeLayoutRequest(AuthenticatedRequest):
     def __init__(self, serverUrl, sessionId, sObjectType):
-        AuthenticatedRequest.__init__(self, serverUrl, sessionId,
-                                      "describeLayout")
+        super(DescribeLayoutRequest, self).__init__(
+            serverUrl, sessionId, "describeLayout")
         self.__sObjectType = sObjectType
 
     def writeBody(self, s):

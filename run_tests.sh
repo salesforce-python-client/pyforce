@@ -2,5 +2,5 @@
 PYTHON=python
 export PYTHONPATH=.:./src
 
-$PYTHON src/pyforce/tests/test_xmlclient.py
-$PYTHON src/pyforce/tests/test_python_client.py
+$PYTHON pyforce/tests/test_xmlclient.py
+$PYTHON pyforce/tests/test_python_client.py
