@@ -12,6 +12,7 @@ setup(
     author_email='ian.bentley@gmail.com, alanjcastonguay@gmail.com',
     description="A Python client wrapping the Salesforce.com SOAP API",
     long_description=open('README.md').read() + "\n" + open('CHANGES.txt').read(),
+    long_description_content_type="text/markdown",
     license="GNU GENERAL PUBLIC LICENSE Version 2",
     keywords="python salesforce salesforce.com",
     url="https://github.com/alanjcastonguay/pyforce",
