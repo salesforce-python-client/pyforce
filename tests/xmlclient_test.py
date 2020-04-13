@@ -10,9 +10,7 @@ import pyforce
 
 partnerns = pyforce.pyclient._tPartnerNS
 sobjectns = pyforce.pyclient._tSObjectNS
-SERVER_URL = "https://test.salesforce.com/services/Soap/u/20.0"
-svc = pyforce.XMLClient(SERVER_URL)
-
+DEFAULT_HOSTNAME = "test.salesforce.com"
 DELAY_RETRY = 10
 DELAY_SEC = 2
 
@@ -20,12 +18,16 @@ DELAY_SEC = 2
 class TestBeatbox(unittest.TestCase):
 
     def setUp(self):
-        svc.login(os.getenv('SF_USERNAME'), os.getenv('SF_PASSWORD'))
+        hostname = os.getenv('SF_HOSTNAME', DEFAULT_HOSTNAME)
+        server_url = "https://{}/services/Soap/u/20.0".format(hostname)
+        self.svc = pyforce.XMLClient(server_url)
+        password = os.getenv('SF_PASSWORD') + os.getenv('SF_SECTOKEN', '')
+        self.svc.login(os.getenv('SF_USERNAME'), password)
         self._todelete = list()
 
     def tearDown(self):
         for id in self._todelete:
-            svc.delete(id)
+            self.svc.delete(id)
 
     def testCreate(self):
         data = dict(
@@ -36,11 +38,11 @@ class TestBeatbox(unittest.TestCase):
             Email='john@doe.com',
             Birthdate=datetime.date(1970, 1, 4),
         )
-        res = svc.create([data])
+        res = self.svc.create([data])
         self.assertEqual(str(res[partnerns.success]), 'true')
         id = str(res[partnerns.id])
         self._todelete.append(id)
-        contact = svc.retrieve(
+        contact = self.svc.retrieve(
             'LastName, FirstName, Phone, Email',
             'Contact',
             [id],
@@ -55,11 +57,11 @@ class TestBeatbox(unittest.TestCase):
             FirstName='John',
             Email='john@doe.com',
         )
-        res = svc.create([data])
+        res = self.svc.create([data])
         self.assertEqual(str(res[partnerns.success]), 'true')
         id = str(res[partnerns.id])
         self._todelete.append(id)
-        contact = svc.retrieve('Email', 'Contact', [id])
+        contact = self.svc.retrieve('Email', 'Contact', [id])
         self.assertEqual(
             str(contact[sobjectns.Email]), data['Email'])
         updata = dict(
@@ -67,9 +69,9 @@ class TestBeatbox(unittest.TestCase):
             Id=id,
             Email='jd@doe.com',
         )
-        res = svc.update(updata)
+        res = self.svc.update(updata)
         self.assertEqual(str(res[partnerns.success]), 'true')
-        contact = svc.retrieve(
+        contact = self.svc.retrieve(
             'LastName, FirstName, Email',
             'Contact',
             [id],
@@ -91,7 +93,7 @@ class TestBeatbox(unittest.TestCase):
             Email='john@doe.com',
             Birthdate=datetime.date(1970, 1, 4),
         )
-        res = svc.create([data])
+        res = self.svc.create([data])
         self.assertEqual(str(res[partnerns.success]), 'true')
         self._todelete.append(str(res[partnerns.id]))
         data2 = dict(
@@ -102,17 +104,17 @@ class TestBeatbox(unittest.TestCase):
             Email='jane@doe.com',
             Birthdate=datetime.date(1972, 10, 15),
         )
-        res = svc.create([data2])
+        res = self.svc.create([data2])
         self.assertEqual(str(res[partnerns.success]), 'true')
         janeid = str(res[partnerns.id])
         self._todelete.append(janeid)
         query = ("select LastName, FirstName, Phone, Email, Birthdate "
                  "from Contact where LastName = 'Doe'")
-        res = svc.query(query)
+        res = self.svc.query(query)
         self.assertEqual(int(str(res[partnerns.size])), 2)
         query = ("select Id, LastName, FirstName, Phone, Email, Birthdate "
                  "from Contact where LastName = 'Doe' and FirstName = 'Jane'")
-        res = svc.query(query)
+        res = self.svc.query(query)
         self.assertEqual(int(str(res[partnerns.size])), 1)
         records = res[partnerns.records, ]
         self.assertEqual(
@@ -127,14 +129,14 @@ class TestBeatbox(unittest.TestCase):
             Email='john@doe.com',
             Birthdate=datetime.date(1970, 1, 4),
         )
-        res = svc.create([data])
+        res = self.svc.create([data])
         self.assertEqual(str(res[partnerns.success]), 'true')
         self._todelete.append(str(res[partnerns.id]))
 
         # Requires some delay for indexing
         for _ in range(DELAY_RETRY):
             sleep(DELAY_SEC)
-            res = svc.search(
+            res = self.svc.search(
                 "FIND {Long} in ALL FIELDS RETURNING "
                 "Contact(Id, LastName, FirstName, Phone, Email, Birthdate)"
             )
@@ -150,22 +152,22 @@ class TestBeatbox(unittest.TestCase):
                 'Salesforce sendEmail()'
             ),
             'saveAsActivity': False,
-            'toAddresses': str(svc.getUserInfo()['userEmail']),
+            'toAddresses': str(self.svc.getUserInfo()['userEmail']),
             'plainTextBody': (
                 'This is a test email message with HTML markup.\n\n'
                 'You are currently looking at the plain-text body, '
                 'but the message is sent in both forms.'
             ),
         }
-        res = svc.sendEmail([testemail])
+        res = self.svc.sendEmail([testemail])
         self.assertEqual(str(res[partnerns.success]), 'true')
 
     @unittest.skip("Email is not working...")
     def testSendEmailMissingFields(self):
         testemail = {
-            'toAddresses': str(svc.getUserInfo()['userEmail']),
+            'toAddresses': str(self.svc.getUserInfo()['userEmail']),
         }
-        res = svc.sendEmail([testemail])
+        res = self.svc.sendEmail([testemail])
         self.assertEqual(str(res[partnerns.success]), 'false')
         self.assertEqual(
             str(res[partnerns.errors][partnerns.statusCode]),
@@ -187,7 +189,7 @@ class TestBeatbox(unittest.TestCase):
             ),
             'useSignature': True,
             'saveAsActivity': False,
-            'toAddresses': str(svc.getUserInfo()['userEmail']),
+            'toAddresses': str(self.svc.getUserInfo()['userEmail']),
             'plainTextBody': (
                 'This is a test email message with HTML markup.\n\n'
                 'You are currently looking at the plain-text body, '
@@ -198,15 +200,15 @@ class TestBeatbox(unittest.TestCase):
             'references': '<1234567890123456789%example@example.com>',
             'fileAttachments': [solid_logo]
         }
-        res = svc.sendEmail([testemail])
+        res = self.svc.sendEmail([testemail])
         self.assertEqual(str(res[partnerns.success]), 'true')
 
     def testLogout(self):
         """Logout and verify that the previous sessionId longer works."""
         # from ipdb import set_trace; set_trace()
-        result = svc.getUserInfo()
+        result = self.svc.getUserInfo()
         self.assertTrue(hasattr(result, 'userId'))
-        response = svc.logout()
+        response = self.svc.logout()
         self.assertEqual(
             response._name,
             partnerns.logoutResponse,
@@ -219,7 +221,7 @@ class TestBeatbox(unittest.TestCase):
             # Sometimes this doesn't work on the first try. Flakey...
             for _ in range(DELAY_RETRY):
                 sleep(DELAY_SEC)
-                result = svc.getUserInfo()
+                result = self.svc.getUserInfo()
         self.assertEqual(
             cm.exception.faultCode,
             'INVALID_SESSION_ID',

@@ -467,6 +467,7 @@ class SoapEnvelope(object):
                     self.serverUrl,
                     data=envelope,
                     headers=headers,
+                    timeout=10,
                 )
             except requests.exceptions.ConnectionError as ex:
                 attempt += 1
