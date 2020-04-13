@@ -1,7 +1,6 @@
 from __future__ import absolute_import
 from __future__ import unicode_literals
 
-from xml.sax import make_parser
 from xml.sax.handler import ContentHandler
 from xml.sax.handler import DTDHandler
 from xml.sax.handler import EntityResolver
@@ -9,7 +8,9 @@ from xml.sax.handler import ErrorHandler
 from xml.sax.handler import feature_namespaces
 
 import defusedxml
+from defusedxml.sax import make_parser
 from six import ensure_str
+from six import string_types
 from six import StringIO
 from six import text_type
 
@@ -21,7 +22,7 @@ __copyright__ = "(C) 2003-2006 Aaron Swartz. GNU GPL 2."
 
 def isstr(mystring):
     '''Check if string is a string or unicode'''
-    return isinstance(mystring, str)
+    return isinstance(mystring, string_types)
 
 
 def islst(myitem):
