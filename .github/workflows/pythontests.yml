@@ -20,21 +20,21 @@ jobs:
         # Eventually, when running tests this should be done for all versions
         # python-version: [2.7, 3.5, 3.6, 3.7, 3.8, pypy2, pypy3]
 
-      steps:
-        - uses: actions/checkout@v2
-        - name: Set up Python ${{ matrix.python-version }}
-          uses: actions/setup-python@v1
-          with:
-            python-version: ${{ matrix.python-version }}
-        - name: Install virtualenv
-          run: |
-            python -m pip install --upgrade pip
-            pip install virtualenv
-        - name: Run lint with pre-commit hooks
-          env:
-            SF_USERNAME: ${{ secrets.SF_USERNAME }}
-            SF_PASSWORD: ${{ secrets.SF_PASSWORD }}
-            SF_SECTOKEN: ${{ secrets.SF_SECTOKEN }}
-            SF_HOSTNAME: ${{ secrets.SF_HOSTNAME }}
-          run: |
-            make test
+    steps:
+      - uses: actions/checkout@v2
+      - name: Set up Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v1
+        with:
+          python-version: ${{ matrix.python-version }}
+      - name: Install virtualenv
+        run: |
+          python -m pip install --upgrade pip
+          pip install virtualenv
+      - name: Run lint with pre-commit hooks
+        env:
+          SF_USERNAME: ${{ secrets.SF_USERNAME }}
+          SF_PASSWORD: ${{ secrets.SF_PASSWORD }}
+          SF_SECTOKEN: ${{ secrets.SF_SECTOKEN }}
+          SF_HOSTNAME: ${{ secrets.SF_HOSTNAME }}
+        run: |
+          make test
