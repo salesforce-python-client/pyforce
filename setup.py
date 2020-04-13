@@ -5,7 +5,7 @@ from setuptools import setup
 
 setup(
     name='pyforce',
-    version='1.9.0',
+    version='1.9.1',
     install_requires=['defusedxml>=0.5.0', 'requests>=2.0.0', 'six>=1.10.0', ],
     packages=['pyforce'],
     author="Simon Fell et al.  reluctantly Forked by idbentley",
